@@ -10,6 +10,8 @@ Code Entropy Meter is a real-time audio analysis application which offers the fo
 * Support for all common host access audio API thanks to portaudio. On Windows that would be: MME, DirectSound, WASAPI, WDM-KS and Steinberg ASIO. Any hardware's supported bit depth, sample rate and channel can be chosen.
 IMPORTANT: Currently tested only on Windows.
 
+![image](https://user-images.githubusercontent.com/14234092/36944622-ca4ea3c6-1fa0-11e8-812a-33016375a9bc.png)
+
 This project is currently hosted on:
 * GitHub: https://github.com/andnich05/codeentropymeter
 
@@ -88,5 +90,4 @@ and permission to use materials/information from this distribution.
 Some programs/data files are released under the terms of the GNU General Public License
 as published by the Free Software Foundation. (Address: Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. Internet: GNU General Public
-License (GPL) from The GNU Project) 
----
+License (GPL) from The GNU Project).
