@@ -54,7 +54,7 @@ public:
     BitDisplay(QWidget *parent = 0);
 
 public:
-    void updateDisplay(QList<qint32> *samples, int bitDepth);
+    void updateDisplay(const QVector<qint32> & samples, int bitDepth);
     // Sets initial number of bits to display
     void setNumberOfBits(int numberOfBits);
     // Set sample position maximum when another block size has been selected
@@ -67,7 +67,7 @@ protected:
     // Enable background-color painting of this widget
     void paintEvent(QPaintEvent *) override;
 
-private:
+private slots:
     // Connected to QPushButton "HOLD" signal
     void setHold(bool hold);
     // Reset one bit by clicking on it

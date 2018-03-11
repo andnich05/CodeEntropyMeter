@@ -36,7 +36,7 @@ PeakMeter::PeakMeter(QWidget *parent)
     maximumDynamicRange = 0;
 }
 
-void PeakMeter::updateMeter(QList<qint32> *signalValues) {
+void PeakMeter::updateMeter(const QVector<qint32> & signalValues) {
     // Get the maximum value of the samples
     currentValue = getMaximum(signalValues);
     emitPeakValue(calculatePeak(currentValue, referenceValue));
@@ -47,11 +47,11 @@ void PeakMeter::updateBitdepth(int bitdepth) {
     maximumDynamicRange = 20*log10(pow(2,bitdepth)/(double)2);
 }
 
-quint32 PeakMeter::getMaximum(QList<qint32> *signalValues) {
+quint32 PeakMeter::getMaximum(const QVector<qint32> & signalValues) {
     maxValue = 0;
     absoluteValue = 0;
-    for(qint32 i=0; i<signalValues->size(); i++) {
-        absoluteValue = abs(signalValues->at(i));
+    for(qint32 i=0; i<signalValues.size(); i++) {
+        absoluteValue = abs(signalValues.at(i));
         maxValue = qMax(maxValue, absoluteValue);
     }
     return maxValue;

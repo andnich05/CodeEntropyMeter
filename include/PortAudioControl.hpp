@@ -55,10 +55,10 @@ public slots:
     // Show Asio panel, for experimental purposes (currently not beeing used)
     //void showAsioPanel(int deviceId, qint32 id);
     // Get buffer and pass it to the MainWindow class
-    void readBuffer(QVector<qint32> samples);
+    void readBuffer(const QVector<qint32> & samples);
 
 signals:
-    void signalSampleListReady(QList<qint32> *sampleList);
+    void signalSampleListReady(const QVector<qint32> & sampleList);
 
 };
 

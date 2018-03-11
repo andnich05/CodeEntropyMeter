@@ -108,13 +108,13 @@ private slots:
     void anotherBlockSizeSelected(int blockSize);
     void anotherBitDepthSelected(int bits);
     void anotherChannelSelected(int channel);
-    void updateEverything(QList<qint32> *samples);
+    void updateEverything(const QVector<qint32> & samples);
     void setEntropyNumberOfBlocks(int numberOfBlocks);
     void showAsioPanel();
     void showInfoWindow();
 
 signals:
-    void signalUpdateEntropy(QVector<qint32> samples);
+    void signalUpdateEntropy(const QVector<qint32> & samples);
 };
 
 

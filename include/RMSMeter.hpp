@@ -34,7 +34,7 @@ public:
     void setReturnTimeValue(double value);
 
 private:
-    double calculateRootMeanSquare(QList<qint32> *signalValues);
+    double calculateRootMeanSquare(const QVector<qint32> & signalValues);
     void emitRmsValue(double rms);
 
     double actualValue;
@@ -44,7 +44,7 @@ private:
     double maximumDynamicRange;
 
 public slots:
-    void updateMeter(QList<qint32> *signalValues);
+    void updateMeter(const QVector<qint32> & signalValues);
     void updateBitdepth(int bitdepth);
 
 signals:

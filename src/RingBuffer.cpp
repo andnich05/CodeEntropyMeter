@@ -39,7 +39,7 @@ void RingBuffer::insertItem(qint32 item, quint32 position) {
     // Write sample to first buffer
     inBuffer[position] = item;
     // Check if buffer is full
-    if(position == inBuffer.size()-1) {
+    if(static_cast< int >( position ) == inBuffer.size()-1) {
         // Lock mutex to prevent the callback function from writing new samples to first buffer
         mutex.lock();
         // Copy first buffer to second buffer

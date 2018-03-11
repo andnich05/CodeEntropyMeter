@@ -33,7 +33,7 @@ RMSMeter::RMSMeter(QWidget *parent)
     maximumDynamicRange = 0;
 }
 
-void RMSMeter::updateMeter(QList<qint32> *signalValues) {
+void RMSMeter::updateMeter(const QVector<qint32> & signalValues) {
     emitRmsValue(calculateRootMeanSquare(signalValues));
 }
 
@@ -42,16 +42,16 @@ void RMSMeter::updateBitdepth(int bitdepth) {
     maximumDynamicRange = 20*log10(pow(2,bitdepth)/(double)2);
 }
 
-double RMSMeter::calculateRootMeanSquare(QList<qint32> *signalValues) {
+double RMSMeter::calculateRootMeanSquare(const QVector<qint32> & signalValues) {
     long double rms = 0;
 
     // Square
-    for(i=0; i<signalValues->size(); i++) {
-        rms += pow(signalValues->at(i), 2);
+    for(i=0; i<signalValues.size(); i++) {
+        rms += pow(signalValues.at(i), 2);
     }
 
     // Mean + Root
-    rms = sqrt(rms / signalValues->size());
+    rms = sqrt(rms / signalValues.size());
 
     // Convert to dB if rms isn't zero
     if(rms > 0) {

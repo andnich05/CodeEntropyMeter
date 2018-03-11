@@ -46,7 +46,7 @@ private slots:
     void emitBufferReadyToBeRead();
 
 signals:
-    void signalBufferReadyToBeRead(QVector<qint32> samples);
+    void signalBufferReadyToBeRead(const QVector<qint32> & samples);
 
 };
 

@@ -42,7 +42,7 @@ private:
     quint32 absoluteValue;
 
     // Get maximum value of all samples
-    quint32 getMaximum(QList<qint32> *signalValues);
+    quint32 getMaximum(const QVector<qint32> & signalValues);
     // Convert to dB
     double calculatePeak(int currentValue, int referenceValue);
     // Pass the value to MeterDisplay
@@ -51,8 +51,8 @@ private:
     double maximumDynamicRange;
 
 public slots:
-    void updateMeter(QList<qint32> *signalValues);
-        void updateBitdepth(int bitdepth);
+    void updateMeter(const QVector<qint32> & signalValues);
+    void updateBitdepth(int bitdepth);
 
 signals:
     void signalUpdatePeakMeter(double value);

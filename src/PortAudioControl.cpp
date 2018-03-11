@@ -29,7 +29,7 @@ PortAudioControl::PortAudioControl(QWidget *parent)
     : QWidget(parent) {
     buffer = new RingBuffer(50000, this);
 
-    connect(buffer, SIGNAL(signalBufferReadyToBeRead(QVector<qint32>)), this, SLOT(readBuffer(QVector<qint32>)));
+    connect(buffer, SIGNAL(signalBufferReadyToBeRead(const QVector<qint32> &)), this, SLOT(readBuffer(const QVector<qint32> &)));
 
     data.buffer = buffer;
     data.littleEndian = true;
@@ -160,7 +160,7 @@ bool PortAudioControl::openStream(int deviceNumber, int channel, int bitDepth, q
 
     qDebug() << Pa_GetDeviceInfo(deviceNumber)->name;
 
-    PaError err = Pa_OpenStream(&stream, &inputParameters, NULL, sampleRate, blockSize, NULL, PortAudioIO::getInputCallback, &data);
+    PaError err = Pa_OpenStream(&stream, &inputParameters, NULL, sampleRate, blockSize, paNoFlag, PortAudioIO::getInputCallback, &data);
     if(err != paNoError) {
         qDebug() << Pa_GetErrorText(err);
         qDebug() << Pa_GetLastHostErrorInfo()->errorText;
@@ -179,8 +179,8 @@ bool PortAudioControl::openStream(int deviceNumber, int channel, int bitDepth, q
     return true;
 }
 
-void PortAudioControl::readBuffer(QVector<qint32> samples) {
-    emit signalSampleListReady(&(samples.toList()));
+void PortAudioControl::readBuffer(const QVector<qint32> & samples) {
+    emit signalSampleListReady(samples);
 }
 
 void PortAudioControl::closeStream() {

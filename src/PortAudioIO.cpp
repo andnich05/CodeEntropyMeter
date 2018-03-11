@@ -54,14 +54,14 @@ int PortAudioIO::getInputCallback(const void *input, void *output, unsigned long
     for(unsigned int i=0; i<frameCount; i++) {
         if(data->bitDepth == 8) {
             for(int i=1; i<data->channel; i++) {
-                *bufferPointer++;
+                bufferPointer++;
             }
             sampleData = (qint32)(*bufferPointer++);
         }
         else if(data->bitDepth == 16) {
             for(int i=1; i<data->channel; i++) {
-                *bufferPointer++;
-                *bufferPointer++;
+                bufferPointer++;
+                bufferPointer++;
             }
             if(data->littleEndian == true) {
                 s1 = (quint32)(*bufferPointer++) & clearFirst24BitsOf32BitsAND;
@@ -76,9 +76,9 @@ int PortAudioIO::getInputCallback(const void *input, void *output, unsigned long
         }
         else if(data->bitDepth == 24) {
             for(int i=1; i<data->channel; i++) {
-                *bufferPointer++;
-                *bufferPointer++;
-                *bufferPointer++;
+                bufferPointer++;
+                bufferPointer++;
+                bufferPointer++;
             }
             if(data->littleEndian == true) {
                 s1 = (quint32)(*bufferPointer++) & clearFirst24BitsOf32BitsAND;

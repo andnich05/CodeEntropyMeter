@@ -148,7 +148,7 @@ BitDisplay::BitDisplay(QWidget *parent)
     connect(this->comboBoxDisplayMode, SIGNAL(currentIndexChanged(QString)), this, SLOT(enableSampleSpinBox(QString)));
 }
 
-void BitDisplay::updateDisplay(QList<qint32> *samples, int bitDepth) {
+void BitDisplay::updateDisplay(const QVector<qint32> & samples, int bitDepth) {
 
     // Shift the bits to the left if bitdepth is smaller than 24 bits
     int shift = 0;
@@ -172,12 +172,12 @@ void BitDisplay::updateDisplay(QList<qint32> *samples, int bitDepth) {
     if(comboBoxDisplayMode->currentText() == "Block") {
         brush.setColor(colorBitSet);
         bits.reset();
-        for(int i=0; i<samples->size(); i++) {
+        for(int i=0; i<samples.size(); i++) {
             if(this->comboBoxConversion->currentText() == "Absolute") {
-                bits = abs(samples->at(i));
+                bits = abs(samples.at(i));
             }
             else {
-                bits = samples->at(i);
+                bits = samples.at(i);
             }
             for(int j=0; j<bitDepth; j++) {
                 if(bits[j] == true) {
@@ -193,10 +193,10 @@ void BitDisplay::updateDisplay(QList<qint32> *samples, int bitDepth) {
     else {
         bits.reset();
         if(this->comboBoxConversion->currentText() == "Absolute") {
-            bits = abs(samples->at(spinBoxSamplePosition->value()-1));
+            bits = abs(samples.at(spinBoxSamplePosition->value()-1));
         }
         else {
-            bits = samples->at(spinBoxSamplePosition->value()-1);
+            bits = samples.at(spinBoxSamplePosition->value()-1);
         }
         for(int j=0; j<bitDepth; j++) {
             if(bits[j] == true) {

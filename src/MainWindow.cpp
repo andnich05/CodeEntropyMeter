@@ -257,7 +257,7 @@ void MainWindow::connectUI() {
     connect(peakMeter, SIGNAL(signalUpdatePeakHolder(double)), meterDisplay, SLOT(updatePeakHolder(double)));
     connect(rmsMeter, SIGNAL(signalUpdateRmsMeter(double)), meterDisplay, SLOT(updateRmsMeter(double)));
     connect(rmsMeter, SIGNAL(signalUpdateRmsHolder(double)), meterDisplay, SLOT(updateRmsHolder(double)));
-    connect(portAudioControl, SIGNAL(signalSampleListReady(QList<qint32>*)), this, SLOT(updateEverything(QList<qint32>*)));
+    connect(portAudioControl, SIGNAL(signalSampleListReady(const QVector<qint32> &)), this, SLOT(updateEverything(const QVector<qint32> &)));
     connect(this, SIGNAL(signalUpdateEntropy(QVector<qint32>)), entropy, SLOT(countValues(QVector<qint32>)));
     connect(entropy, SIGNAL(finished(double)), entropyDisplay, SLOT(updateEntropy(double)));
     connect(entropyDisplay, SIGNAL(signalNumberOfBlocksChanged(int)), this, SLOT(setEntropyNumberOfBlocks(int)));
@@ -331,11 +331,11 @@ void MainWindow::showAsioPanel() {
     //portAudioControl->showAsioPanel(devices[optionsPanel->boxAudioInputDevice->itemData(optionsPanel->boxAudioInputDevice->currentIndex()).toInt()].deviceIndex, this->winId());
 }
 
-void MainWindow::updateEverything(QList<qint32> *samples) {
+void MainWindow::updateEverything(const QVector<qint32> & samples) {
     peakMeter->updateMeter(samples);
     rmsMeter->updateMeter(samples);
     bitDisplay->updateDisplay(samples, parameters.bitDepth);
-    emit signalUpdateEntropy(samples->toVector());
+    emit signalUpdateEntropy(samples);
 }
 
 void MainWindow::setEntropyNumberOfBlocks(int numberOfBlocks) {
