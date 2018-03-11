@@ -1,31 +1,32 @@
 HEADERS += \
-    include\PortAudioIO.hpp \
-    include\RingBuffer.hpp \
-    include\PortAudioControl.hpp \
-    include\BitDisplay.hpp \
-    include\RMSMeter.hpp \
-    include\PeakMeter.hpp \
-    include\MainWindow.hpp \
-    include\OptionPanel.hpp \
-    include\Entropy.hpp \
-    include\EntropyDisplay.hpp \
-    include\MeterDisplay.hpp \
-    include\InfoWindow.hpp
+    include/BitDisplay.hpp \
+    include/Entropy.hpp \
+    include/EntropyDisplay.hpp \
+    include/InfoWindow.hpp \
+    include/MainWindow.hpp \
+    include/MeterDisplay.hpp \
+    include/OptionPanel.hpp \
+    include/PeakMeter.hpp \
+    include/PortAudioControl.hpp \
+    include/PortAudioIO.hpp \
+    include/RingBuffer.hpp \
+    include/RMSMeter.hpp
 
 SOURCES += \
-    src\Main.cpp \
-    src\PortAudioIO.cpp \
-    src\RingBuffer.cpp \
-    src\PortAudioControl.cpp \
-    src\BitDisplay.cpp \
-    src\RMSMeter.cpp \
-    src\PeakMeter.cpp \
-    src\MainWindow.cpp \
-    src\OptionPanel.cpp \
-    src\Entropy.cpp \
-    src\EntropyDisplay.cpp \
-    src\MeterDisplay.cpp \
-    src\InfoWindow.cpp
+    src/BitDisplay.cpp \
+    src/Entropy.cpp \
+    src/EntropyDisplay.cpp \
+    src/InfoWindow.cpp \
+    src/Main.cpp \
+    src/MainWindow.cpp \
+    src/MeterDisplay.cpp \
+    src/OptionPanel.cpp \
+    src/PeakMeter.cpp \
+    src/PortAudioControl.cpp \
+    src/PortAudioIO.cpp \
+    src/RingBuffer.cpp \
+    src/RMSMeter.cpp
+
 
 
 
