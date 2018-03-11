@@ -37,6 +37,7 @@ TARGET = code-entropy-meter
 QT += widgets \
 
 win32: LIBS += -L$$PWD/lib/portaudio -lportaudio_x86 -lportaudio_x64
+unix: LIBS += -L$$PWD/lib/portaudio -lportaudio -lasound
 
 INCLUDEPATH += $$PWD/include
 INCLUDEPATH += $$PWD/include/portaudio
