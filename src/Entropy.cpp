@@ -24,29 +24,22 @@
 
 const double LOG2 = log10(2);
 
-Entropy::Entropy() {
-    // Propabilities for positive symbols, range is from 0 to 2^24/2-1
-    counterArrayPositive = new quint32[0x800000];
-
-    // Propabilities for negative symbols, range is from -1 to -2^24/2
-    counterArrayNegative = new quint32[0x800000];
-
-    i = 0;
-    numberOfSymbols = pow(2,16);
-    numberOfSamples = 0;
-    entropy = 0.0;
-    blockCounter = 0;
-    numberOfBlocks = 50;
-    probabilityPositive = 0;
-    probabilityNegative = 0;
+Entropy::Entropy()
+    : counterArrayPositive(0x800000) // Propabilities for positive symbols, range is from 0 to 2^24/2-1
+    , counterArrayNegative(0x800000) // Propabilities for negative symbols, range is from -1 to -2^24/2
+    , probabilityPositive(0.0)
+    , probabilityNegative(0.0)
+    , numberOfSymbols(pow(2,16))
+    , numberOfSamples(0)
+    , i(0)
+    , entropy(0.0)
+    , blockCounter(0)
+    , numberOfBlocks(50)
+    , blockSize(0)
+{
 }
 
-Entropy::~Entropy() {
-    delete [] counterArrayNegative;
-    delete [] counterArrayPositive;
-}
-
-void Entropy::countValues(QVector<qint32> signalValues) {
+void Entropy::countValues(const std::vector<uint32_t> & signalValues) {
     i = 0;
 
     // Clear all arrays if its the first block
@@ -55,20 +48,16 @@ void Entropy::countValues(QVector<qint32> signalValues) {
     }
 
     // Count how often each symbol occurs
-    mutex.lock();
-    for(i=0; i<(quint32)signalValues.size(); i++) {
+    for(i=0; i<signalValues.size(); ++i) {
         if(signalValues.at(i) >= 0) {
-            counterArrayPositive[signalValues.at(i)]++;
-            //qDebug() << counterArrayPositive[signalValues.at(i)] << signalValues.at(i);
+            ++counterArrayPositive[signalValues[i]];
         }
         else {
-            counterArrayNegative[-signalValues.at(i)]++;
-            //qDebug() << counterArrayNegative[signalValues.at(i)] << signalValues.at(i);
+            ++counterArrayNegative[-signalValues[i]];
         }
 
     }
-    mutex.unlock();
-    blockCounter++;
+    ++blockCounter;
 
     // Calculate entropy if all blocks have been processed
     if(blockCounter == numberOfBlocks) {
@@ -77,17 +66,16 @@ void Entropy::countValues(QVector<qint32> signalValues) {
     }
 }
 
-void Entropy::calculateEntropy(int blockSize) {
+double Entropy::calculateEntropy(int blockSize) {
     entropy = 0.0;
     probabilityPositive = 0;
     probabilityNegative = 0;
     numberOfSamples = blockSize*numberOfBlocks;
-    mutex.lock();
     for(i=0; i<numberOfSymbols/2; i++) {
 
         // Calculate propabilities
-        probabilityPositive = (double)counterArrayPositive[i]/(numberOfSamples);
-        probabilityNegative = (double)counterArrayNegative[i+1]/(numberOfSamples);
+        probabilityPositive = (double)counterArrayPositive[i]/numberOfSamples;
+        probabilityNegative = (double)counterArrayNegative[i+1]/numberOfSamples;
 
         // Calculate entropy
         if(probabilityPositive > 0.0) {
@@ -98,8 +86,7 @@ void Entropy::calculateEntropy(int blockSize) {
         }
     }
     entropy = -entropy/LOG2;
-    emit finished(entropy);
-    mutex.unlock();
+    return entropy;
 }
 
 void Entropy::setNumberOfBlocks(int numberOfBlocks) {
@@ -112,15 +99,11 @@ void Entropy::setNumberOfSymbols(int bitdepth) {
 
 void Entropy::clear() {
     entropy = 0.0;
-    // Fill arrays with zeros
-    for(i=0; i<numberOfSymbols/2; i++) {
-        counterArrayPositive[i] = 0.0;
-        counterArrayNegative[i+1] = 0.0;
-    }
+    std::fill(counterArrayPositive.begin(), counterArrayPositive.end(), 0);
+    std::fill(counterArrayNegative.begin(), counterArrayNegative.end(), 0);
 }
 
 void Entropy::reset() {
     clear();
     blockCounter = 0;
-    //emit finished(0);
 }

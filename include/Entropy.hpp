@@ -21,20 +21,18 @@
 #ifndef ENTROPY_H
 #define ENTROPY_H
 
-#include <QVector>
-#include <QObject>
-#include <QMutex>
+#include <cstdint>
+#include <vector>
 
-class Entropy : public QObject {
-    Q_OBJECT
+class Entropy {
 
 public:
     Entropy();
-    virtual ~Entropy();
+    ~Entropy();
 
-public slots:
-    void countValues(QVector<qint32> signalValues);
-    void calculateEntropy(int blockSize);
+public:
+    void countValues(const std::vector<uint32_t> & signalValues);
+    double calculateEntropy(int blockSize);
     // Set number of blocks to process
     void setNumberOfBlocks(int numberOfBlocks);
     // Set new numberOfSymbols if bitdepth has changed
@@ -44,26 +42,22 @@ public slots:
     // Reset blockCounter if "Stop" has been pressed
     void reset();
 
-signals:
-    void finished(double entropy);
-
 private:
     // Counter for positive-symbols
-    quint32 *counterArrayPositive;
+    std::vector<uint32_t> counterArrayPositive;
     // Counter for negatve-symbols
-    quint32 *counterArrayNegative;
+    std::vector<uint32_t> counterArrayNegative;
 
     double probabilityPositive;
     double probabilityNegative;
-    quint32 numberOfSymbols;
-    quint32 numberOfSamples;
-    quint32 i;
+    uint32_t numberOfSymbols;
+    uint32_t numberOfSamples;
+    size_t i;
     double entropy;
     int blockCounter;
     // Number of blocks to process
     int numberOfBlocks;
     int blockSize;
-    QMutex mutex;
 };
 
 #endif // ENTROPY_H

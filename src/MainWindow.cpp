@@ -188,6 +188,7 @@ void MainWindow::initializeUI() {
 }
 
 MainWindow::~MainWindow() {
+    stop();
     workerThread.quit();
     workerThread.wait();
 }
@@ -258,7 +259,7 @@ void MainWindow::connectUI() {
     connect(rmsMeter, SIGNAL(signalUpdateRmsMeter(double)), meterDisplay, SLOT(updateRmsMeter(double)));
     connect(rmsMeter, SIGNAL(signalUpdateRmsHolder(double)), meterDisplay, SLOT(updateRmsHolder(double)));
     connect(portAudioControl, SIGNAL(signalSampleListReady(const QVector<qint32> &)), this, SLOT(updateEverything(const QVector<qint32> &)));
-    connect(this, SIGNAL(signalUpdateEntropy(QVector<qint32>)), entropy, SLOT(countValues(QVector<qint32>)));
+    connect(this, SIGNAL(signalUpdateEntropy(const QVector<qint32> &)), entropy, SLOT(countValues(const QVector<qint32> &)));
     connect(entropy, SIGNAL(finished(double)), entropyDisplay, SLOT(updateEntropy(double)));
     connect(entropyDisplay, SIGNAL(signalNumberOfBlocksChanged(int)), this, SLOT(setEntropyNumberOfBlocks(int)));
     connect(optionsPanel, SIGNAL(signalInfoButtonPressed()), this, SLOT(showInfoWindow()));
