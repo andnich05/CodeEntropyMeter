@@ -41,7 +41,7 @@ public:
     void setInputDevices(QList<QString> name, QList<int> boxIndex);
     void setChannels(int numberOfChannels);
     void setBitDepths(QList<int> bitDepths);
-    void setSampleRates(QList<quint32> sampleRates);
+    void setSampleRates(const std::vector<uint32_t> & sampleRates);
 
     // Disable or enable UI when stream is being opened or closed
     void disableUI(bool disable);

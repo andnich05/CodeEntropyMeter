@@ -33,7 +33,7 @@ class QLabel;
 class MeterView : public QGraphicsView {
     Q_OBJECT
 protected:
-    void mousePressEvent(QMouseEvent *event);
+    void mousePressEvent(QMouseEvent *event) override;
 signals:
     void signalMouseEvent(QPoint pos);
 };

@@ -24,16 +24,22 @@
 
 const double INF = -999;
 
-RMSMeter::RMSMeter(QWidget *parent)
-    : QWidget(parent) {
-
-    actualValue = -60;
-    returnTimeValue = 0;
-    referenceValue = 0;
-    maximumDynamicRange = 0;
+RMSMeter::RMSMeter(RMSMeterListener *listener)
+    : rmsListener(listener)
+    , actualValue(-60.0)
+    , returnTimeValue(0.0)
+    , referenceValue(0)
+    , i(0)
+    , maximumDynamicRange(0.0)
+{
 }
 
-void RMSMeter::updateMeter(const QVector<qint32> & signalValues) {
+void RMSMeter::updateMeter(const std::vector<int32_t> & signalValues) {
+    if(!rmsListener)
+    {
+        return;
+    }
+
     emitRmsValue(calculateRootMeanSquare(signalValues));
 }
 
@@ -42,12 +48,12 @@ void RMSMeter::updateBitdepth(int bitdepth) {
     maximumDynamicRange = 20*log10(pow(2,bitdepth)/(double)2);
 }
 
-double RMSMeter::calculateRootMeanSquare(const QVector<qint32> & signalValues) {
+double RMSMeter::calculateRootMeanSquare(const std::vector<int32_t> & signalValues) {
     long double rms = 0;
 
     // Square
-    for(i=0; i<signalValues.size(); i++) {
-        rms += pow(signalValues.at(i), 2);
+    for(const auto& signalValue : signalValues) {
+        rms += pow(signalValue, 2);
     }
 
     // Mean + Root
@@ -72,7 +78,7 @@ void RMSMeter::emitRmsValue(double rms) {
         actualValue = rms;
         // Check if the holder needs to be updated
         if(rms >= -60) {
-            emit signalUpdateRmsHolder(actualValue);
+            rmsListener->receiveRmsHolderValue(actualValue);
         }
     }
     // Check if the signal is clipping
@@ -81,7 +87,7 @@ void RMSMeter::emitRmsValue(double rms) {
     }
 
     // Update current meter value
-    emit signalUpdateRmsMeter(actualValue);
+    rmsListener->receiveRmsMeterValue(actualValue);
 
     // Decrement current value if the calculated value is smaller (return time)
     if(rms < actualValue) {

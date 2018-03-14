@@ -32,7 +32,7 @@ EntropyDisplay::EntropyDisplay(QWidget *parent)
     : QWidget(parent) {
 
     labelEntropy = new QLabel(trUtf8("Entropy: 0.00000 bit"), this);
-    labelEntropy->setFont(QFont("Serif", 20, QFont::Bold));
+    labelEntropy->setFont(QFont("Sans", 20, QFont::Bold));
     labelNumberOfBlocks = new QLabel(trUtf8("Number of blocks to process: "), this);
     boxNumberOfBlocks = new QSpinBox(this);
     boxNumberOfBlocks->setMinimum(1);

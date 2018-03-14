@@ -21,43 +21,42 @@
 #ifndef PEAKMETER_H
 #define PEAKMETER_H
 
-#include <QWidget>
+#include <cstdint>
+#include <vector>
 
-class PeakMeter : public QWidget {
-    Q_OBJECT
-
+class PeakMeterListener {
 public:
-    PeakMeter(QWidget *parent = 0);
+    PeakMeterListener() {}
+
+    virtual void receivePeakMeterValue(double value) = 0;
+    virtual void receivePeakHolderValue(double value) = 0;
+};
+
+class PeakMeter {
+public:
+    PeakMeter(PeakMeterListener *listener = nullptr);
     // Set the time for meter return
     void setReturnTimeValue(double value);
+    void updateMeter(const std::vector<int32_t> & signalValues);
+    void updateBitdepth(int bitdepth);
 
 private:
-
-    double actualValue;
-    double returnTimeValue;
-
-    quint32 currentValue;
-    quint32 referenceValue;
-    quint32 maxValue;
-    quint32 absoluteValue;
-
     // Get maximum value of all samples
-    quint32 getMaximum(const QVector<qint32> & signalValues);
+    uint32_t getMaximum(const std::vector<int32_t> & signalValues);
     // Convert to dB
     double calculatePeak(int currentValue, int referenceValue);
     // Pass the value to MeterDisplay
     void emitPeakValue(double peak);
 
+private:
+    PeakMeterListener *peakMeterListener;
+    double actualValue;
+    double returnTimeValue;
+    uint32_t currentValue;
+    uint32_t referenceValue;
+    uint32_t maxValue;
+    uint32_t absoluteValue;
     double maximumDynamicRange;
-
-public slots:
-    void updateMeter(const QVector<qint32> & signalValues);
-    void updateBitdepth(int bitdepth);
-
-signals:
-    void signalUpdatePeakMeter(double value);
-    void signalUpdatePeakHolder(double value);
-
 };
 
 #endif // PEAKMETER_H

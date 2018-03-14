@@ -21,30 +21,47 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include <memory>
 #include <QMainWindow>
 #include <QThread>
 #include "portaudio.h"
+#include "PortAudioControl.hpp"
+#include "Entropy.hpp"
+#include "PeakMeter.hpp"
+#include "RMSMeter.hpp"
 
 class OptionPanel;
-class Entropy;
 class BitDisplay;
-class PeakMeter;
-class RMSMeter;
 class MeterDisplay;
-class PortAudioControl;
 class EntropyDisplay;
 class InfoWindow;
 
 class QHBoxLayout;
 class QVBoxLayout;
 
-class MainWindow : public QMainWindow {
+class MainWindow
+    : public QMainWindow
+    , public PortAudioControlListener
+    , public EntropyListener
+    , public PeakMeterListener
+    , public RMSMeterListener
+{
     Q_OBJECT
 
 public:
     MainWindow(QWidget *parent = 0);
     virtual ~MainWindow ();
 
+public:
+    virtual void receivePortAudioSamples(const std::vector<int32_t> & samples);
+
+    virtual void receiveEntropy(double entropy);
+
+    virtual void receivePeakHolderValue(double value);
+    virtual void receivePeakMeterValue(double value);
+
+    virtual void receiveRmsHolderValue(double rms);
+    virtual void receiveRmsMeterValue(double rms);
 private:
     // Struct with information of all input devices
     struct device {
@@ -52,7 +69,7 @@ private:
         int deviceIndex;
         PaHostApiTypeId hostApi;
         int maxInputChannels;
-        QList<quint32> supportedSampleRates;
+        std::vector<uint32_t> supportedSampleRates;
     };
     QList<device> devices;
 
@@ -68,16 +85,14 @@ private:
         int channel;
     } parameters;
 
-    QThread workerThread;
-
     // Objects
     OptionPanel *optionsPanel;
     BitDisplay *bitDisplay;
-    Entropy *entropy;
+    std::unique_ptr<Entropy> entropy;
     PeakMeter *peakMeter;
-    RMSMeter *rmsMeter;
+    std::unique_ptr<RMSMeter> rmsMeter;
     MeterDisplay *meterDisplay;
-    PortAudioControl *portAudioControl;
+    std::unique_ptr<PortAudioControl> portAudioControl;
     EntropyDisplay *entropyDisplay;
     InfoWindow *infoWindow;
 
@@ -108,13 +123,21 @@ private slots:
     void anotherBlockSizeSelected(int blockSize);
     void anotherBitDepthSelected(int bits);
     void anotherChannelSelected(int channel);
-    void updateEverything(const QVector<qint32> & samples);
     void setEntropyNumberOfBlocks(int numberOfBlocks);
     void showAsioPanel();
     void showInfoWindow();
+    void updateEntropyDisplay(double entropy);
+    void updatePeakHolder(double value);
+    void updatePeakMeter(double value);
+    void updateRmsHolder(double value);
+    void updateRmsMeter(double value);
 
 signals:
-    void signalUpdateEntropy(const QVector<qint32> & samples);
+    void signalUpdateEntropyDisplay(double entropy);
+    void signalUpdatePeakHolder(double value);
+    void signalUpdatePeakMeter(double value);
+    void signalUpdateRmsHolder(double value);
+    void signalUpdateRmsMeter(double value);
 };
 
 

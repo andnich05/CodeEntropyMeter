@@ -21,35 +21,47 @@
 #ifndef RMSMETER_H
 #define RMSMETER_H
 
-#include <QWidget>
+#include <cstdint>
+#include <vector>
 
-class QLabel;
+class RMSMeterListener
+{
+public:
+    RMSMeterListener() {}
 
-class RMSMeter : public QWidget {
-    Q_OBJECT
+    virtual void receiveRmsMeterValue(double rms) = 0;
+    virtual void receiveRmsHolderValue(double rms) = 0;
+};
+
+class RMSMeter {
 
 public:
-    RMSMeter(QWidget *parent = 0);
+    RMSMeter(RMSMeterListener *listener = nullptr);
+
+public:
     // Set the time for meter return
     void setReturnTimeValue(double value);
-
-private:
-    double calculateRootMeanSquare(const QVector<qint32> & signalValues);
-    void emitRmsValue(double rms);
-
-    double actualValue;
-    double returnTimeValue;
-    quint32 referenceValue;
-    qint32 i;
-    double maximumDynamicRange;
-
-public slots:
-    void updateMeter(const QVector<qint32> & signalValues);
+    void updateMeter(const std::vector<int32_t> & signalValues);
     void updateBitdepth(int bitdepth);
 
-signals:
-    void signalUpdateRmsMeter(double value);
-    void signalUpdateRmsHolder(double value);
+private:
+    double calculateRootMeanSquare(const std::vector<int32_t> & signalValues);
+    void emitRmsValue(double rms);
+
+private:
+    RMSMeterListener *rmsListener;
+    double actualValue;
+    double returnTimeValue;
+    uint32_t referenceValue;
+    int32_t i;
+    double maximumDynamicRange;
+
+//public slots:
+
+
+//signals:
+//    void signalUpdateRmsMeter(double value);
+//    void signalUpdateRmsHolder(double value);
 };
 
 #endif // RMSMETER_H

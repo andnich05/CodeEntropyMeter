@@ -127,12 +127,12 @@ void OptionPanel::setBitDepths(QList<int> bitDepths) {
     }
 }
 
-void OptionPanel::setSampleRates(QList<quint32> sampleRates) {
+void OptionPanel::setSampleRates(const std::vector<uint32_t> & sampleRates) {
     boxSampleRate->clear();
-    for(int i=0; i<sampleRates.size(); i++) {
+    for(size_t i=0; i<sampleRates.size(); i++) {
         boxSampleRate->addItem(QString::number(sampleRates.at(i)));
         if(sampleRates.at(i) == 44100) {
-            boxSampleRate->setCurrentIndex(i);
+            boxSampleRate->setCurrentIndex(static_cast<int>(i));
         }
     }
 }

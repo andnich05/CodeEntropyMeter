@@ -19,27 +19,24 @@
  */
 
 #include "RingBuffer.hpp"
-#include <QDebug>
 
-RingBuffer::RingBuffer(int capacity, QWidget *parent)
-    : QWidget(parent) {
-
-    // Allocate memory for both buffers by setting capacity
-    inBuffer.fill(0, capacity);
-    outBuffer.fill(0, capacity);
+RingBuffer::RingBuffer(int capacity, RingBufferReceiver *receiver)
+    : inBuffer(capacity, 0)
+    , outBuffer(capacity, 0)
+    , receiverObject(receiver)
+{
 }
 
 void RingBuffer::clearAndResize(int capacity) {
-    // Allocate memory for both buffers by setting capacity
-    inBuffer.fill(0, capacity);
-    outBuffer.fill(0, capacity);
+    inBuffer.assign(capacity, 0);
+    outBuffer.assign(capacity, 0);
 }
 
-void RingBuffer::insertItem(qint32 item, quint32 position) {
+void RingBuffer::insertItem(int32_t item, uint32_t position) {
     // Write sample to first buffer
     inBuffer[position] = item;
     // Check if buffer is full
-    if(static_cast< int >( position ) == inBuffer.size()-1) {
+    if(static_cast< size_t >( position ) == inBuffer.size()-1) {
         // Lock mutex to prevent the callback function from writing new samples to first buffer
         mutex.lock();
         // Copy first buffer to second buffer
@@ -47,10 +44,13 @@ void RingBuffer::insertItem(qint32 item, quint32 position) {
         // Unlock mutex
         mutex.unlock();
         // Second buffer is ready to be read
-        emitBufferReadyToBeRead();
+        if(receiverObject)
+        {
+            receiverObject->receiveSamples(outBuffer);
+        }
     }
 }
 
-void RingBuffer::emitBufferReadyToBeRead() {
-    emit signalBufferReadyToBeRead(outBuffer);
-}
+//void RingBuffer::emitBufferReadyToBeRead() {
+//    emit signalBufferReadyToBeRead(outBuffer);
+//}

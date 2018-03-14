@@ -21,44 +21,56 @@
 #ifndef PORTAUDIOCONTROL_H
 #define PORTAUDIOCONTROL_H
 
-#include <QWidget>
-#include "PortAudioIO.hpp"
+#include <vector>
 #include <portaudio.h>
 
-class RingBuffer;
+#include "PortAudioIO.hpp"
+#include "RingBuffer.hpp"
 
-class PortAudioControl : public QWidget {
-    Q_OBJECT
+class PortAudioControlListener {
+public:
+    PortAudioControlListener() {}
+
+    virtual void receivePortAudioSamples(const std::vector<int32_t> & samples) = 0;
+};
+
+class PortAudioControl
+    : public RingBufferReceiver {
 
 public:
-    PortAudioControl(QWidget *parent = 0);
-    ~PortAudioControl();
+    PortAudioControl(PortAudioControlListener *listener = nullptr);
     // Initialize PortAudio, return "true" if everything is okay
     bool initialize();
     // Get an array with all PortAudio devices
-    QList<PaDeviceInfo> getPaDeviceInfo();
+    const std::vector<PaDeviceInfo> & getPaDeviceInfo();
     // Get info about a specific host api
-    PaHostApiInfo getApiInfo(int apiIndex);
+    const PaHostApiInfo & getApiInfo(int apiIndex);
     // Get the supported samples rates for a specific device
-    QList<quint32> getSupportedSampleRates(int deviceNumber);
+    const std::vector<uint32_t> & getSupportedSampleRates(int deviceNumber);
     // Open stream with given parameters
-    bool openStream(int deviceNumber, int channel, int bitDepth, quint32 sampleRate, quint32 blockSize);
+    bool openStream(int deviceNumber, int channel, int bitDepth, uint32_t sampleRate, uint32_t blockSize);
     void closeStream();
 
+    virtual void receiveSamples(const std::vector<int32_t> & samples) override;
+
 private:
+    PortAudioControlListener *controlListener;
     PaStream *stream;
-    RingBuffer *buffer;
+    std::shared_ptr<RingBuffer> buffer;
     // Array with custom data to pass to the callback function
     PortAudioIO::paTestData data;
+    std::vector<PaDeviceInfo> deviceInfos;
+    PaHostApiInfo apiInfo;
+    std::vector<uint32_t> supportedSampleRates;
 
-public slots:
+//public slots:
     // Show Asio panel, for experimental purposes (currently not beeing used)
     //void showAsioPanel(int deviceId, qint32 id);
     // Get buffer and pass it to the MainWindow class
-    void readBuffer(const QVector<qint32> & samples);
+    //void readBuffer(const std::vector<int32_t> & samples);
 
-signals:
-    void signalSampleListReady(const QVector<qint32> & sampleList);
+//signals:
+    //void signalSampleListReady(const std::vector<int32_t> & sampleList);
 
 };
 

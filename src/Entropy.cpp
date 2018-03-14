@@ -24,8 +24,9 @@
 
 const double LOG2 = log10(2);
 
-Entropy::Entropy()
-    : counterArrayPositive(0x800000) // Propabilities for positive symbols, range is from 0 to 2^24/2-1
+Entropy::Entropy(EntropyListener *listener)
+    : entropyListener(listener)
+    , counterArrayPositive(0x800000) // Propabilities for positive symbols, range is from 0 to 2^24/2-1
     , counterArrayNegative(0x800000) // Propabilities for negative symbols, range is from -1 to -2^24/2
     , probabilityPositive(0.0)
     , probabilityNegative(0.0)
@@ -39,8 +40,11 @@ Entropy::Entropy()
 {
 }
 
-void Entropy::countValues(const std::vector<uint32_t> & signalValues) {
-    i = 0;
+void Entropy::addSamples(const std::vector<int32_t> & signalValues) {
+    if(!entropyListener)
+    {
+        return;
+    }
 
     // Clear all arrays if its the first block
     if(blockCounter == 0) {
@@ -61,7 +65,7 @@ void Entropy::countValues(const std::vector<uint32_t> & signalValues) {
 
     // Calculate entropy if all blocks have been processed
     if(blockCounter == numberOfBlocks) {
-        calculateEntropy(signalValues.size());
+        entropyListener->receiveEntropy(calculateEntropy(static_cast<int>(signalValues.size())));
         blockCounter = 0;
     }
 }

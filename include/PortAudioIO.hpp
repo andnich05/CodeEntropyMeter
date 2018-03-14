@@ -21,8 +21,10 @@
 #ifndef PORTAUDIOIO_H
 #define PORTAUDIOIO_H
 
+#include <cstdint>
+#include <memory>
+
 #include "portaudio.h"
-#include <QtGlobal>
 
 class RingBuffer;
 
@@ -37,21 +39,21 @@ public:
 
     // Array with custom user data which is passed to the callback function
     typedef struct {
-        RingBuffer *buffer;
+        std::shared_ptr<RingBuffer> buffer;
         int bitDepth;
         bool littleEndian;
         int channel;
     } paTestData;
 
 private:
-    static quint32 sampleCounter;
-    static const qint8 *bufferPointer;
+    static uint32_t sampleCounter;
+    static const int8_t *bufferPointer;
 
     // 8 bit pointer used to iterate trhough the memory addresses
-    static qint32 sampleData;
-    static quint32 s1;
-    static quint32 s2;
-    static quint32 s3;
+    static int32_t sampleData;
+    static uint32_t s1;
+    static uint32_t s2;
+    static uint32_t s3;
 
     static paTestData *data;
 };

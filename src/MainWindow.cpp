@@ -44,21 +44,22 @@ const QColor colorFont(255,255,255);
 const QColor colorFrame(80,80,80);
 
 MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent) {
+    : QMainWindow(parent)
+{
 
     this->setWindowTitle("Code Entropy Meter");
 
     initializeUI();
 
-    if(portAudioControl->initialize() == false) {
+    if(!portAudioControl->initialize()) {
         return;
     }
 
-    if(getDeviceInformation() == false) {
+    if(!getDeviceInformation()) {
         return;
     }
 
-    if(setOptions() == false) {
+    if(!setOptions()) {
         return;
     }
 
@@ -80,6 +81,39 @@ MainWindow::MainWindow(QWidget *parent)
     anotherSampleRateSelected(44100);
     anotherBlockSizeSelected(2048);
     bitDisplay->setSampleMaximum(2048);
+}
+
+void MainWindow::receivePortAudioSamples(const std::vector<int32_t> & samples)
+{
+    peakMeter->updateMeter(samples);
+    rmsMeter->updateMeter(samples);
+    bitDisplay->updateDisplay(samples, parameters.bitDepth);
+    entropy->addSamples(samples);
+}
+
+void MainWindow::receiveEntropy(double entropy)
+{
+    emit signalUpdateEntropyDisplay(entropy);
+}
+
+void MainWindow::receivePeakHolderValue(double value)
+{
+    emit signalUpdatePeakHolder(value);
+}
+
+void MainWindow::receivePeakMeterValue(double value)
+{
+    emit signalUpdatePeakMeter(value);
+}
+
+void MainWindow::receiveRmsHolderValue(double rms)
+{
+    emit signalUpdateRmsHolder(rms);
+}
+
+void MainWindow::receiveRmsMeterValue(double rms)
+{
+    emit signalUpdateRmsMeter(rms);
 }
 
 void MainWindow::resizeEvent(QResizeEvent *event) {
@@ -126,13 +160,10 @@ void MainWindow::initializeUI() {
     QGroupBox *boxEntropyDisplay = new QGroupBox("", this);
     boxEntropyDisplay->setLayout(entropyDisplayLayout);
 
-    entropy = new Entropy();
-    // Move entropy calculation to another thread to prevent a blocked UI
-    entropy->moveToThread(&workerThread);
-    workerThread.start();
+    entropy.reset(new Entropy(this));
 
     peakMeter = new PeakMeter(this);
-    rmsMeter = new RMSMeter(this);
+    rmsMeter.reset(new RMSMeter(this));
 
     meterDisplay = new MeterDisplay(this);
     meterDisplay->setObjectName("meterDisplay");
@@ -144,7 +175,7 @@ void MainWindow::initializeUI() {
     boxMeters->setFixedWidth(135);
     boxMeters->setLayout(meterDisplayLayout);
 
-    portAudioControl = new PortAudioControl(this);
+    portAudioControl.reset(new PortAudioControl(this));
 
     mainVLayout = new QVBoxLayout();
     mainVLayout->addWidget(boxBitDisplay,1);
@@ -188,9 +219,8 @@ void MainWindow::initializeUI() {
 }
 
 MainWindow::~MainWindow() {
+    // Stop portaudio stream
     stop();
-    workerThread.quit();
-    workerThread.wait();
 }
 
 bool MainWindow::getDeviceInformation() {
@@ -204,19 +234,19 @@ bool MainWindow::getDeviceInformation() {
     }
 
     devices.clear();
-    QList<PaDeviceInfo> deviceInfo = portAudioControl->getPaDeviceInfo();
+    const std::vector<PaDeviceInfo> & deviceInfo = portAudioControl->getPaDeviceInfo();
     if(deviceInfo.empty()) {
         return false;
     }
 
-    for(int i=0; i<deviceInfo.size(); i++) {
-        if(deviceInfo.at(i).maxInputChannels > 0) {
+    for(size_t i=0; i<deviceInfo.size(); i++) {
+        if(deviceInfo[i].maxInputChannels > 0) {
             device d;
             d.name = QString::fromStdString(deviceInfo[i].name);
-            d.deviceIndex = i;
+            d.deviceIndex = static_cast<int>(i);
             d.hostApi = portAudioControl->getApiInfo(deviceInfo[i].hostApi).type;
             d.maxInputChannels = deviceInfo[i].maxInputChannels;
-            d.supportedSampleRates = portAudioControl->getSupportedSampleRates(i);
+            d.supportedSampleRates = portAudioControl->getSupportedSampleRates(static_cast<int>(i));
             devices.append(d);
         }
     }
@@ -254,13 +284,11 @@ void MainWindow::connectUI() {
     connect(optionsPanel, SIGNAL(signalHostApiChanged(int)), this, SLOT(anotherApiSelected(int)));
     connect(optionsPanel, SIGNAL(signalInputDeviceChanged(int)), this, SLOT(anotherDeviceSelected(int)));
     connect(optionsPanel, SIGNAL(signalInputChannelChanged(int)), this, SLOT(anotherChannelSelected(int)));
-    connect(peakMeter, SIGNAL(signalUpdatePeakMeter(double)), meterDisplay, SLOT(updatePeakMeter(double)));
-    connect(peakMeter, SIGNAL(signalUpdatePeakHolder(double)), meterDisplay, SLOT(updatePeakHolder(double)));
-    connect(rmsMeter, SIGNAL(signalUpdateRmsMeter(double)), meterDisplay, SLOT(updateRmsMeter(double)));
-    connect(rmsMeter, SIGNAL(signalUpdateRmsHolder(double)), meterDisplay, SLOT(updateRmsHolder(double)));
-    connect(portAudioControl, SIGNAL(signalSampleListReady(const QVector<qint32> &)), this, SLOT(updateEverything(const QVector<qint32> &)));
-    connect(this, SIGNAL(signalUpdateEntropy(const QVector<qint32> &)), entropy, SLOT(countValues(const QVector<qint32> &)));
-    connect(entropy, SIGNAL(finished(double)), entropyDisplay, SLOT(updateEntropy(double)));
+    connect(this, SIGNAL(signalUpdatePeakMeter(double)), this, SLOT(updatePeakMeter(double)));
+    connect(this, SIGNAL(signalUpdatePeakHolder(double)), this, SLOT(updatePeakHolder(double)));
+    connect(this, SIGNAL(signalUpdateRmsMeter(double)), this, SLOT(updateRmsMeter(double)));
+    connect(this, SIGNAL(signalUpdateRmsHolder(double)), this, SLOT(updateRmsHolder(double)));
+    connect(this, SIGNAL(signalUpdateEntropyDisplay(double)), this, SLOT(updateEntropyDisplay(double)));
     connect(entropyDisplay, SIGNAL(signalNumberOfBlocksChanged(int)), this, SLOT(setEntropyNumberOfBlocks(int)));
     connect(optionsPanel, SIGNAL(signalInfoButtonPressed()), this, SLOT(showInfoWindow()));
 }
@@ -289,14 +317,14 @@ void MainWindow::anotherSampleRateSelected(int sampleRate) {
     parameters.sampleRate = sampleRate;
     setEntropyNumberOfBlocks(entropyDisplay->getNumberOfBlocks());
     peakMeter->setReturnTimeValue(((double)parameters.blockSize/(double)sampleRate)*(20/1.7));
-    rmsMeter->setReturnTimeValue(((double)parameters.blockSize/(double)sampleRate)*(20/1.7));
+    //rmsMeter->setReturnTimeValue(((double)parameters.blockSize/(double)sampleRate)*(20/1.7));
 }
 
 void MainWindow::anotherBlockSizeSelected(int blockSize) {
     parameters.blockSize = blockSize;
     setEntropyNumberOfBlocks(entropyDisplay->getNumberOfBlocks());
     peakMeter->setReturnTimeValue(((double)blockSize/(double)parameters.sampleRate)*(20/1.7));
-    rmsMeter->setReturnTimeValue(((double)blockSize/(double)parameters.sampleRate)*(20/1.7));
+    //rmsMeter->setReturnTimeValue(((double)blockSize/(double)parameters.sampleRate)*(20/1.7));
     bitDisplay->setSampleMaximum(blockSize);
 }
 
@@ -332,13 +360,6 @@ void MainWindow::showAsioPanel() {
     //portAudioControl->showAsioPanel(devices[optionsPanel->boxAudioInputDevice->itemData(optionsPanel->boxAudioInputDevice->currentIndex()).toInt()].deviceIndex, this->winId());
 }
 
-void MainWindow::updateEverything(const QVector<qint32> & samples) {
-    peakMeter->updateMeter(samples);
-    rmsMeter->updateMeter(samples);
-    bitDisplay->updateDisplay(samples, parameters.bitDepth);
-    emit signalUpdateEntropy(samples);
-}
-
 void MainWindow::setEntropyNumberOfBlocks(int numberOfBlocks) {
     entropy->setNumberOfBlocks(numberOfBlocks);
     entropyDisplay->updateIntegrationTimeLabel((double)(parameters.blockSize)/(double)(parameters.sampleRate)*1000);
@@ -355,4 +376,29 @@ void MainWindow::showInfoWindow() {
     else {
         infoWindow->hide();
     }
+}
+
+void MainWindow::updateEntropyDisplay(double entropy)
+{
+    entropyDisplay->updateEntropy(entropy);
+}
+
+void MainWindow::updatePeakHolder(double value)
+{
+    meterDisplay->updatePeakHolder(value);
+}
+
+void MainWindow::updatePeakMeter(double value)
+{
+    meterDisplay->updatePeakMeter(value);
+}
+
+void MainWindow::updateRmsHolder(double value)
+{
+    meterDisplay->updateRmsHolder(value);
+}
+
+void MainWindow::updateRmsMeter(double value)
+{
+    meterDisplay->updateRmsMeter(value);
 }

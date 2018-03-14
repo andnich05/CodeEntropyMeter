@@ -24,19 +24,24 @@
 
 const double INF = -999;
 
-PeakMeter::PeakMeter(QWidget *parent)
-    : QWidget(parent) {
-
-    returnTimeValue = 0;
-    actualValue = -60;
-    currentValue = 0;
-    referenceValue = 0;
-    maxValue = 0;
-    absoluteValue = 0;
-    maximumDynamicRange = 0;
+PeakMeter::PeakMeter(PeakMeterListener *listener)
+    : peakMeterListener(listener)
+    , actualValue(-60)
+    , returnTimeValue(0)
+    , currentValue(0)
+    , referenceValue(0)
+    , maxValue(0)
+    , absoluteValue(0)
+    , maximumDynamicRange(0)
+{
 }
 
-void PeakMeter::updateMeter(const QVector<qint32> & signalValues) {
+void PeakMeter::updateMeter(const std::vector<int32_t> & signalValues) {
+    if(!peakMeterListener)
+    {
+        return;
+    }
+
     // Get the maximum value of the samples
     currentValue = getMaximum(signalValues);
     emitPeakValue(calculatePeak(currentValue, referenceValue));
@@ -47,12 +52,12 @@ void PeakMeter::updateBitdepth(int bitdepth) {
     maximumDynamicRange = 20*log10(pow(2,bitdepth)/(double)2);
 }
 
-quint32 PeakMeter::getMaximum(const QVector<qint32> & signalValues) {
+quint32 PeakMeter::getMaximum(const std::vector<int32_t> & signalValues) {
     maxValue = 0;
     absoluteValue = 0;
-    for(qint32 i=0; i<signalValues.size(); i++) {
-        absoluteValue = abs(signalValues.at(i));
-        maxValue = qMax(maxValue, absoluteValue);
+    for(const auto& signalValue : signalValues) {
+        absoluteValue = std::abs(signalValue);
+        maxValue = std::max(maxValue, absoluteValue);
     }
     return maxValue;
 }
@@ -72,7 +77,7 @@ void PeakMeter::emitPeakValue(double peak) {
         actualValue = peak;
         // Check if the holder needs to be updated
         if(peak >= -60) {
-            emit signalUpdatePeakHolder(actualValue);
+            peakMeterListener->receivePeakHolderValue(actualValue);
         }
     }
     // Check if the signal is clipping
@@ -81,7 +86,7 @@ void PeakMeter::emitPeakValue(double peak) {
     }
 
     // Update current meter value
-    emit signalUpdatePeakMeter(actualValue);
+    peakMeterListener->receivePeakMeterValue(actualValue);
 
     // Decrement current value if the calculated value is smaller (return time)
     if(peak < actualValue) {
@@ -95,5 +100,5 @@ void PeakMeter::emitPeakValue(double peak) {
 }
 
 void PeakMeter::setReturnTimeValue(double value) {
-    this->returnTimeValue = value;
+    returnTimeValue = value;
 }

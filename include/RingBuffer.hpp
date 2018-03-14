@@ -21,32 +21,39 @@
 #ifndef RINGBUFFER_H
 #define RINGBUFFER_H
 
-#include <QMutex>
-#include <QVector>
-#include <QWidget>
+#include <memory>
+#include <mutex>
+#include <vector>
 
-class RingBuffer : public QWidget {
-    Q_OBJECT
+class RingBufferReceiver {
+public:
+    RingBufferReceiver() {}
+
+    virtual void receiveSamples(const std::vector<int32_t> & samples) = 0;
+};
+
+class RingBuffer {
 
 public:
-    RingBuffer(int capacity, QWidget *parent = 0);
+    RingBuffer(int capacity, RingBufferReceiver *receiver = nullptr);
     void clearAndResize(int capacity);
     // Insert sample at position
-    void insertItem(qint32 item, quint32 position);
+    void insertItem(int32_t item, uint32_t position);
 
 private:
     // Buffer to which is written by the callback function
-    QVector<qint32> inBuffer;
+    std::vector<int32_t> inBuffer;
     // Buffer to pass to further processing
-    QVector<qint32> outBuffer;
+    std::vector<int32_t> outBuffer;
     // Mutex to lock while copying from inBuffer to outBuffer
-    QMutex mutex;
+    std::mutex mutex;
+    RingBufferReceiver *receiverObject;
 
-private slots:
-    void emitBufferReadyToBeRead();
+//private slots:
+//    void emitBufferReadyToBeRead();
 
-signals:
-    void signalBufferReadyToBeRead(const QVector<qint32> & samples);
+//signals:
+//    void signalBufferReadyToBeRead(const std::vector<int32_t> & samples);
 
 };
 

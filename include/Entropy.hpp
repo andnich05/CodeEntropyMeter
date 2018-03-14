@@ -24,15 +24,20 @@
 #include <cstdint>
 #include <vector>
 
+class EntropyListener {
+public:
+    EntropyListener() {}
+
+    virtual void receiveEntropy(double entropy) = 0;
+};
+
 class Entropy {
 
 public:
-    Entropy();
-    ~Entropy();
+    Entropy(EntropyListener *listener = nullptr);
 
 public:
-    void countValues(const std::vector<uint32_t> & signalValues);
-    double calculateEntropy(int blockSize);
+    void addSamples(const std::vector<int32_t> & signalValues);
     // Set number of blocks to process
     void setNumberOfBlocks(int numberOfBlocks);
     // Set new numberOfSymbols if bitdepth has changed
@@ -43,6 +48,11 @@ public:
     void reset();
 
 private:
+    double calculateEntropy(int blockSize);
+
+private:
+    EntropyListener *entropyListener;
+
     // Counter for positive-symbols
     std::vector<uint32_t> counterArrayPositive;
     // Counter for negatve-symbols
@@ -52,7 +62,7 @@ private:
     double probabilityNegative;
     uint32_t numberOfSymbols;
     uint32_t numberOfSamples;
-    size_t i;
+    std::size_t i;
     double entropy;
     int blockCounter;
     // Number of blocks to process
