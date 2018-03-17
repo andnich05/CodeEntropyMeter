@@ -27,7 +27,8 @@
 #include "PortAudioIO.hpp"
 #include "RingBuffer.hpp"
 
-class PortAudioControlListener {
+class PortAudioControlListener
+{
 public:
     PortAudioControlListener() {}
 
@@ -35,8 +36,8 @@ public:
 };
 
 class PortAudioControl
-    : public RingBufferReceiver {
-
+    : public RingBufferReceiver
+{
 public:
     PortAudioControl(PortAudioControlListener *listener = nullptr);
     // Initialize PortAudio, return "true" if everything is okay
@@ -54,24 +55,14 @@ public:
     virtual void receiveSamples(const std::vector<int32_t> & samples) override;
 
 private:
-    PortAudioControlListener *controlListener;
-    PaStream *stream;
-    std::shared_ptr<RingBuffer> buffer;
+    PortAudioControlListener *m_controlListener;
+    PaStream *m_stream;
+    std::shared_ptr<RingBuffer> m_buffer;
     // Array with custom data to pass to the callback function
-    PortAudioIO::paTestData data;
-    std::vector<PaDeviceInfo> deviceInfos;
-    PaHostApiInfo apiInfo;
-    std::vector<uint32_t> supportedSampleRates;
-
-//public slots:
-    // Show Asio panel, for experimental purposes (currently not beeing used)
-    //void showAsioPanel(int deviceId, qint32 id);
-    // Get buffer and pass it to the MainWindow class
-    //void readBuffer(const std::vector<int32_t> & samples);
-
-//signals:
-    //void signalSampleListReady(const std::vector<int32_t> & sampleList);
-
+    PortAudioIO::PortAudioUserData m_data;
+    std::vector<PaDeviceInfo> m_deviceInfos;
+    PaHostApiInfo m_apiInfo;
+    std::vector<uint32_t> m_supportedSampleRates;
 };
 
 #endif // PORTAUDIOCONTROL_H

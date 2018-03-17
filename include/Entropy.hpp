@@ -22,16 +22,19 @@
 #define ENTROPY_H
 
 #include <cstdint>
+#include <map>
 #include <vector>
 
-class EntropyListener {
+class EntropyListener
+{
 public:
     EntropyListener() {}
 
     virtual void receiveEntropy(double entropy) = 0;
 };
 
-class Entropy {
+class Entropy
+{
 
 public:
     Entropy(EntropyListener *listener = nullptr);
@@ -42,32 +45,24 @@ public:
     void setNumberOfBlocks(int numberOfBlocks);
     // Set new numberOfSymbols if bitdepth has changed
     void setNumberOfSymbols(int bitdepth);
-    // Clear arrays
+    // Clear everything
     void clear();
     // Reset blockCounter if "Stop" has been pressed
     void reset();
 
 private:
-    double calculateEntropy(int blockSize);
+    void calculateEntropy(int blockSize);
 
 private:
-    EntropyListener *entropyListener;
-
-    // Counter for positive-symbols
-    std::vector<uint32_t> counterArrayPositive;
-    // Counter for negatve-symbols
-    std::vector<uint32_t> counterArrayNegative;
-
-    double probabilityPositive;
-    double probabilityNegative;
-    uint32_t numberOfSymbols;
-    uint32_t numberOfSamples;
-    std::size_t i;
-    double entropy;
-    int blockCounter;
-    // Number of blocks to process
-    int numberOfBlocks;
-    int blockSize;
+    EntropyListener *m_entropyListener;
+    double m_probability;
+    uint32_t m_numberOfSymbols;
+    uint32_t m_numberOfSamples;
+    double m_entropy;
+    int m_blockCounter;
+    int m_numberOfBlocks;
+    int m_blockSize;
+    std::map<int32_t, uint32_t> m_mapSymbolsToOccurrence;
 };
 
 #endif // ENTROPY_H

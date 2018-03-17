@@ -18,24 +18,26 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "MainWindow.hpp"
+
 #include "BitDisplay.hpp"
 #include "OptionPanel.hpp"
-#include "PeakMeter.hpp"
-#include "RMSMeter.hpp"
+//#include "PeakMeter.hpp"
+//#include "RMSMeter.hpp"
 #include "MeterDisplay.hpp"
-#include "PortAudioControl.hpp"
+//#include "PortAudioControl.hpp"
 #include "EntropyDisplay.hpp"
-#include "MainWindow.hpp"
-#include "Entropy.hpp"
+
+//#include "Entropy.hpp"
 #include "InfoWindow.hpp"
 
-#include <QComboBox>
+//#include <QComboBox>
 #include <QDebug>
 #include <QLayout>
-#include <QPushButton>
-#include <QSpinBox>
-#include <QThread>
-#include <QVector>
+//#include <QPushButton>
+//#include <QSpinBox>
+//#include <QThread>
+//#include <QVector>
 #include <QGroupBox>
 
 const QColor colorBackground(50,50,50);
@@ -46,49 +48,51 @@ const QColor colorFrame(80,80,80);
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
-
-    this->setWindowTitle("Code Entropy Meter");
+    setWindowTitle("Code Entropy Meter");
 
     initializeUI();
 
-    if(!portAudioControl->initialize()) {
+    if(!m_portAudioControl->initialize())
+    {
         return;
     }
 
-    if(!getDeviceInformation()) {
+    if(!getDeviceInformation())
+    {
         return;
     }
 
-    if(!setOptions()) {
+    if(!setOptions())
+    {
         return;
     }
 
     connectUI();
 
-    parameters.bitDepth = 16;
-    parameters.blockSize = 2048;
-    parameters.channel = 1;
-    parameters.device = 0;
-    parameters.deviceIndex = 0;
-    parameters.hostApiId = 0;
-    parameters.sampleFormat = paInt16;
-    parameters.sampleRate = 44100;
+    m_parameters.m_bitDepth = 16;
+    m_parameters.m_blockSize = 2048;
+    m_parameters.m_channel = 1;
+    m_parameters.m_device = 0;
+    m_parameters.m_deviceIndex = 0;
+    m_parameters.m_hostApiId = 0;
+    m_parameters.m_sampleFormat = paInt16;
+    m_parameters.m_sampleRate = 44100;
 
-    anotherApiSelected(devices.at(0).hostApi);
+    anotherApiSelected(m_devices.at(0).m_hostApi);
     anotherDeviceSelected(0);
     anotherChannelSelected(1);
     anotherBitDepthSelected(16);
     anotherSampleRateSelected(44100);
     anotherBlockSizeSelected(2048);
-    bitDisplay->setSampleMaximum(2048);
+    m_bitDisplay->setSampleMaximum(2048);
 }
 
 void MainWindow::receivePortAudioSamples(const std::vector<int32_t> & samples)
 {
-    peakMeter->updateMeter(samples);
-    rmsMeter->updateMeter(samples);
-    bitDisplay->updateDisplay(samples, parameters.bitDepth);
-    entropy->addSamples(samples);
+    m_peakMeter->updateMeter(samples);
+    m_rmsMeter->updateMeter(samples);
+    m_bitDisplay->updateDisplay(samples, m_parameters.m_bitDepth);
+    m_entropy->addSamples(samples);
 }
 
 void MainWindow::receiveEntropy(double entropy)
@@ -116,92 +120,95 @@ void MainWindow::receiveRmsMeterValue(double rms)
     emit signalUpdateRmsMeter(rms);
 }
 
-void MainWindow::resizeEvent(QResizeEvent *event) {
+void MainWindow::resizeEvent(QResizeEvent *event)
+{
     (void) event;
-    infoWindow->setGeometry(this->size().width()/2-125, this->size().height()/2-50,250,100);
+    m_infoWindow->setGeometry(size().width()/2-125, size().height()/2-50,250,100);
 }
 
-void MainWindow::closeEvent(QCloseEvent *event) {
+void MainWindow::closeEvent(QCloseEvent *event)
+{
     (void) event;
-    infoWindow->close();
+    m_infoWindow->close();
 }
 
-void MainWindow::initializeUI() {
-    this->setFixedSize(510,540);
+void MainWindow::initializeUI()
+{
+    setFixedSize(510,540);
 
-    optionsPanel = new OptionPanel(this);
-    optionsPanel->setObjectName("optionsPanel");
-    optionsPanel->disableStopButton(true);
+    m_optionsPanel = new OptionPanel(this);
+    m_optionsPanel->setObjectName("optionsPanel");
+    m_optionsPanel->disableStopButton(true);
 
     QHBoxLayout *optionsLayout = new QHBoxLayout();
-    optionsLayout->addWidget(optionsPanel);
+    optionsLayout->addWidget(m_optionsPanel);
     optionsLayout->setContentsMargins(0,0,0,0);
     QGroupBox *boxOptions = new QGroupBox("", this);
     boxOptions->setLayout(optionsLayout);
 
-    bitDisplay = new BitDisplay(this);
-    bitDisplay->setNumberOfBits(16);
-    bitDisplay->setAutoFillBackground(true);
-    bitDisplay->setObjectName("bitDisplay");
+    m_bitDisplay = new BitDisplay(this);
+    m_bitDisplay->setNumberOfBits(16);
+    m_bitDisplay->setAutoFillBackground(true);
+    m_bitDisplay->setObjectName("bitDisplay");
 
     QHBoxLayout *bitDisplayLayout = new QHBoxLayout();
-    bitDisplayLayout->addWidget(bitDisplay);
+    bitDisplayLayout->addWidget(m_bitDisplay);
     bitDisplayLayout->setContentsMargins(0,0,0,0);
     QGroupBox *boxBitDisplay = new QGroupBox("", this);
     boxBitDisplay->setLayout(bitDisplayLayout);
 
-    entropyDisplay = new EntropyDisplay(this);
-    entropyDisplay->setAutoFillBackground(true);
-    entropyDisplay->setObjectName("entropyDisplay");
+    m_entropyDisplay = new EntropyDisplay(this);
+    m_entropyDisplay->setAutoFillBackground(true);
+    m_entropyDisplay->setObjectName("entropyDisplay");
 
     QHBoxLayout *entropyDisplayLayout = new QHBoxLayout();
-    entropyDisplayLayout->addWidget(entropyDisplay);
+    entropyDisplayLayout->addWidget(m_entropyDisplay);
     entropyDisplayLayout->setContentsMargins(0,0,0,0);
     QGroupBox *boxEntropyDisplay = new QGroupBox("", this);
     boxEntropyDisplay->setLayout(entropyDisplayLayout);
 
-    entropy.reset(new Entropy(this));
+    m_entropy.reset(new Entropy(this));
 
-    peakMeter = new PeakMeter(this);
-    rmsMeter.reset(new RMSMeter(this));
+    m_peakMeter = new PeakMeter(this);
+    m_rmsMeter.reset(new RMSMeter(this));
 
-    meterDisplay = new MeterDisplay(this);
-    meterDisplay->setObjectName("meterDisplay");
+    m_meterDisplay = new MeterDisplay(this);
+    m_meterDisplay->setObjectName("meterDisplay");
 
     QHBoxLayout *meterDisplayLayout = new QHBoxLayout();
-    meterDisplayLayout->addWidget(meterDisplay);
+    meterDisplayLayout->addWidget(m_meterDisplay);
     meterDisplayLayout->setContentsMargins(0,0,0,0);
     QGroupBox *boxMeters = new QGroupBox("", this);
     boxMeters->setFixedWidth(135);
     boxMeters->setLayout(meterDisplayLayout);
 
-    portAudioControl.reset(new PortAudioControl(this));
+    m_portAudioControl.reset(new PortAudioControl(this));
 
-    mainVLayout = new QVBoxLayout();
-    mainVLayout->addWidget(boxBitDisplay,1);
-    mainVLayout->addWidget(boxEntropyDisplay,1);
-    mainVLayout->addWidget(boxOptions,4);
-    mainVLayout->setSpacing(2);
+    m_mainVLayout = new QVBoxLayout();
+    m_mainVLayout->addWidget(boxBitDisplay,1);
+    m_mainVLayout->addWidget(boxEntropyDisplay,1);
+    m_mainVLayout->addWidget(boxOptions,4);
+    m_mainVLayout->setSpacing(2);
 
-    mainHLayout = new QHBoxLayout();
-    mainHLayout->setContentsMargins(0,0,0,0);
-    mainHLayout->setSpacing(2);
-    mainHLayout->addWidget(boxMeters);
-    meterDisplay->setFixedWidth(135);
+    m_mainHLayout = new QHBoxLayout();
+    m_mainHLayout->setContentsMargins(0,0,0,0);
+    m_mainHLayout->setSpacing(2);
+    m_mainHLayout->addWidget(boxMeters);
+    m_meterDisplay->setFixedWidth(135);
 
-    mainLayout = new QHBoxLayout();
-    mainLayout->addLayout(mainVLayout,1);
-    mainLayout->addLayout(mainHLayout,2);
-    mainLayout->setSpacing(2);
+    m_mainLayout = new QHBoxLayout();
+    m_mainLayout->addLayout(m_mainVLayout,1);
+    m_mainLayout->addLayout(m_mainHLayout,2);
+    m_mainLayout->setSpacing(2);
 
     QWidget *centralWidget = new QWidget(this);
-    centralWidget->setLayout(mainLayout);
-    this->setCentralWidget(centralWidget);
+    centralWidget->setLayout(m_mainLayout);
+    setCentralWidget(centralWidget);
 
-    infoWindow = new InfoWindow();
-    infoWindow->setObjectName("infoWindow");
-    infoWindow->setFixedSize(300,330);
-    infoWindow->setWindowTitle("Information");
+    m_infoWindow = new InfoWindow();
+    m_infoWindow->setObjectName("infoWindow");
+    m_infoWindow->setFixedSize(300,330);
+    m_infoWindow->setWindowTitle("Information");
     //infoWindow->hide();
 
     boxEntropyDisplay->setStyleSheet("QGroupBox { border: 1px outset " + colorFrame.name() + "; }");
@@ -209,7 +216,7 @@ void MainWindow::initializeUI() {
     boxOptions->setStyleSheet("QGroupBox { border: 1px outset " + colorFrame.name() + "; }");
     boxMeters->setStyleSheet("QGroupBox { border: 1px outset " + colorFrame.name() + "; }");
 
-    this->setStyleSheet("QMainWindow { background-color: " + colorBackground.name() + "; }"
+    setStyleSheet("QMainWindow { background-color: " + colorBackground.name() + "; }"
                         "QWidget#optionsPanel { background-color: " + colorWidgetBackground.name() + "; }"
                         "QWidget#bitDisplay { background-color: " + colorWidgetBackground.name() + "; }"
                         "QWidget#meterDisplay { background-color: " + colorWidgetBackground.name() + "; }"
@@ -218,187 +225,215 @@ void MainWindow::initializeUI() {
 
 }
 
-MainWindow::~MainWindow() {
+MainWindow::~MainWindow()
+{
     // Stop portaudio stream
     stop();
 }
 
-bool MainWindow::getDeviceInformation() {
+bool MainWindow::getDeviceInformation()
+{
     int numberOfDevices = Pa_GetDeviceCount();
-    if(numberOfDevices < 1) {
+    if(numberOfDevices < 1)
+    {
         qDebug() << "No devices found!";
         return false;
     }
-    else {
+    else
+    {
         qDebug() << "Number of devices:" << numberOfDevices;
     }
 
-    devices.clear();
-    const std::vector<PaDeviceInfo> & deviceInfo = portAudioControl->getPaDeviceInfo();
-    if(deviceInfo.empty()) {
+    m_devices.clear();
+    const std::vector<PaDeviceInfo> & deviceInfo = m_portAudioControl->getPaDeviceInfo();
+    if(deviceInfo.empty())
+    {
         return false;
     }
 
-    for(size_t i=0; i<deviceInfo.size(); i++) {
-        if(deviceInfo[i].maxInputChannels > 0) {
-            device d;
-            d.name = QString::fromStdString(deviceInfo[i].name);
-            d.deviceIndex = static_cast<int>(i);
-            d.hostApi = portAudioControl->getApiInfo(deviceInfo[i].hostApi).type;
-            d.maxInputChannels = deviceInfo[i].maxInputChannels;
-            d.supportedSampleRates = portAudioControl->getSupportedSampleRates(static_cast<int>(i));
-            devices.append(d);
+    for(size_t i=0; i<deviceInfo.size(); i++)
+    {
+        if(deviceInfo[i].maxInputChannels > 0)
+        {
+            DeviceInformation d;
+            d.m_name = deviceInfo[i].name;
+            d.m_deviceIndex = static_cast<int>(i);
+            d.m_hostApi = m_portAudioControl->getApiInfo(deviceInfo[i].hostApi).type;
+            d.m_maxInputChannels = deviceInfo[i].maxInputChannels;
+            d.m_supportedSampleRates = m_portAudioControl->getSupportedSampleRates(static_cast<int>(i));
+            m_devices.push_back(d);
         }
     }
 
     return true;
 }
 
-bool MainWindow::setOptions() {
+bool MainWindow::setOptions()
+{
     QList<QString> hostList;
     QList<int> apiIds;
-    for(int i=0; i<Pa_GetHostApiCount(); i++) {
-        int apiTypeId = portAudioControl->getApiInfo(i).type;
-        if(portAudioControl->getApiInfo(i).deviceCount > 0) {
-            hostList.append(portAudioControl->getApiInfo(i).name);
+    for(int i=0; i<Pa_GetHostApiCount(); i++)
+    {
+        int apiTypeId = m_portAudioControl->getApiInfo(i).type;
+        if(m_portAudioControl->getApiInfo(i).deviceCount > 0)
+        {
+            hostList.append(m_portAudioControl->getApiInfo(i).name);
             apiIds.append(apiTypeId);
         }
     }
-    if(hostList.size() > 0) {
-        optionsPanel->setHostApis(hostList, apiIds);
+    if(hostList.size() > 0)
+    {
+        m_optionsPanel->setHostApis(hostList, apiIds);
     }
 
     QList<int> bitDepths;
     bitDepths << 8 << 16 << 24;
-    optionsPanel->setBitDepths(bitDepths);
+    m_optionsPanel->setBitDepths(bitDepths);
 
     return true;
 }
 
-void MainWindow::connectUI() {
-    connect(optionsPanel, SIGNAL(signalStartButtonPressed()), this, SLOT(start()));
-    connect(optionsPanel, SIGNAL(signalStopButtonPressed()), this, SLOT(stop()));
-    connect(optionsPanel, SIGNAL(signalBitDepthChanged(int)), this, SLOT(anotherBitDepthSelected(int)));
-    connect(optionsPanel, SIGNAL(signalSampleRateChanged(int)), this, SLOT(anotherSampleRateSelected(int)));
-    connect(optionsPanel, SIGNAL(signalBlockSizeChanged(int)), this, SLOT(anotherBlockSizeSelected(int)));
-    connect(optionsPanel, SIGNAL(signalHostApiChanged(int)), this, SLOT(anotherApiSelected(int)));
-    connect(optionsPanel, SIGNAL(signalInputDeviceChanged(int)), this, SLOT(anotherDeviceSelected(int)));
-    connect(optionsPanel, SIGNAL(signalInputChannelChanged(int)), this, SLOT(anotherChannelSelected(int)));
+void MainWindow::connectUI()
+{
+    connect(m_optionsPanel, SIGNAL(signalStartButtonPressed()), this, SLOT(start()));
+    connect(m_optionsPanel, SIGNAL(signalStopButtonPressed()), this, SLOT(stop()));
+    connect(m_optionsPanel, SIGNAL(signalBitDepthChanged(int)), this, SLOT(anotherBitDepthSelected(int)));
+    connect(m_optionsPanel, SIGNAL(signalSampleRateChanged(int)), this, SLOT(anotherSampleRateSelected(int)));
+    connect(m_optionsPanel, SIGNAL(signalBlockSizeChanged(int)), this, SLOT(anotherBlockSizeSelected(int)));
+    connect(m_optionsPanel, SIGNAL(signalHostApiChanged(int)), this, SLOT(anotherApiSelected(int)));
+    connect(m_optionsPanel, SIGNAL(signalInputDeviceChanged(int)), this, SLOT(anotherDeviceSelected(int)));
+    connect(m_optionsPanel, SIGNAL(signalInputChannelChanged(int)), this, SLOT(anotherChannelSelected(int)));
     connect(this, SIGNAL(signalUpdatePeakMeter(double)), this, SLOT(updatePeakMeter(double)));
     connect(this, SIGNAL(signalUpdatePeakHolder(double)), this, SLOT(updatePeakHolder(double)));
     connect(this, SIGNAL(signalUpdateRmsMeter(double)), this, SLOT(updateRmsMeter(double)));
     connect(this, SIGNAL(signalUpdateRmsHolder(double)), this, SLOT(updateRmsHolder(double)));
     connect(this, SIGNAL(signalUpdateEntropyDisplay(double)), this, SLOT(updateEntropyDisplay(double)));
-    connect(entropyDisplay, SIGNAL(signalNumberOfBlocksChanged(int)), this, SLOT(setEntropyNumberOfBlocks(int)));
-    connect(optionsPanel, SIGNAL(signalInfoButtonPressed()), this, SLOT(showInfoWindow()));
+    connect(m_entropyDisplay, SIGNAL(signalNumberOfBlocksChanged(int)), this, SLOT(setEntropyNumberOfBlocks(int)));
+    connect(m_optionsPanel, SIGNAL(signalInfoButtonPressed()), this, SLOT(showInfoWindow()));
 }
 
-void MainWindow::anotherApiSelected(int api) {
-    parameters.hostApiId = api;
+void MainWindow::anotherApiSelected(int api)
+{
+    m_parameters.m_hostApiId = api;
     QList<QString> devicesList;
     QList<int> deviceIds;
-    for(int i=0; i<devices.size(); i++) {
-        if(devices[i].hostApi == api) {
-            devicesList.append(devices[i].name);
+    for(size_t i=0; i<m_devices.size(); i++)
+    {
+        if(m_devices[i].m_hostApi == api)
+        {
+            devicesList.append(QString::fromStdString(m_devices[i].m_name));
             deviceIds.append(i);
         }
     }
-    optionsPanel->setInputDevices(devicesList, deviceIds);
+    m_optionsPanel->setInputDevices(devicesList, deviceIds);
 }
 
-void MainWindow::anotherDeviceSelected(int device) {
-    parameters.device = device;
-    parameters.deviceIndex = devices.at(device).deviceIndex;
-    optionsPanel->setSampleRates(devices.at(device).supportedSampleRates);
-    optionsPanel->setChannels(devices.at(device).maxInputChannels);
+void MainWindow::anotherDeviceSelected(int device)
+{
+    m_parameters.m_device = device;
+    m_parameters.m_deviceIndex = m_devices.at(device).m_deviceIndex;
+    m_optionsPanel->setSampleRates(m_devices.at(device).m_supportedSampleRates);
+    m_optionsPanel->setChannels(m_devices.at(device).m_maxInputChannels);
 }
 
-void MainWindow::anotherSampleRateSelected(int sampleRate) {
-    parameters.sampleRate = sampleRate;
-    setEntropyNumberOfBlocks(entropyDisplay->getNumberOfBlocks());
-    peakMeter->setReturnTimeValue(((double)parameters.blockSize/(double)sampleRate)*(20/1.7));
-    //rmsMeter->setReturnTimeValue(((double)parameters.blockSize/(double)sampleRate)*(20/1.7));
+void MainWindow::anotherSampleRateSelected(int sampleRate)
+{
+    m_parameters.m_sampleRate = sampleRate;
+    setEntropyNumberOfBlocks(m_entropyDisplay->getNumberOfBlocks());
+    m_peakMeter->setReturnTimeValue((static_cast<double>(m_parameters.m_blockSize)/static_cast<double>(sampleRate))*(20.0/1.7));
+    m_rmsMeter->setReturnTimeValue((static_cast<double>(m_parameters.m_blockSize)/static_cast<double>(sampleRate))*(20.0/1.7));
 }
 
-void MainWindow::anotherBlockSizeSelected(int blockSize) {
-    parameters.blockSize = blockSize;
-    setEntropyNumberOfBlocks(entropyDisplay->getNumberOfBlocks());
-    peakMeter->setReturnTimeValue(((double)blockSize/(double)parameters.sampleRate)*(20/1.7));
-    //rmsMeter->setReturnTimeValue(((double)blockSize/(double)parameters.sampleRate)*(20/1.7));
-    bitDisplay->setSampleMaximum(blockSize);
+void MainWindow::anotherBlockSizeSelected(int blockSize)
+{
+    m_parameters.m_blockSize = blockSize;
+    setEntropyNumberOfBlocks(m_entropyDisplay->getNumberOfBlocks());
+    m_peakMeter->setReturnTimeValue((static_cast<double>(blockSize)/static_cast<double>(m_parameters.m_sampleRate))*(20.0/1.7));
+    m_rmsMeter->setReturnTimeValue((static_cast<double>(blockSize)/static_cast<double>(m_parameters.m_sampleRate))*(20.0/1.7));
+    m_bitDisplay->setSampleMaximum(blockSize);
 }
 
-void MainWindow::anotherBitDepthSelected(int bits) {
-    parameters.bitDepth = bits;
-    bitDisplay->setNumberOfBits(bits);
-    entropy->setNumberOfSymbols(bits);
-    peakMeter->updateBitdepth(bits);
-    rmsMeter->updateBitdepth(bits);
+void MainWindow::anotherBitDepthSelected(int bits)
+{
+    m_parameters.m_bitDepth = bits;
+    m_bitDisplay->setNumberOfBits(bits);
+    m_entropy->setNumberOfSymbols(bits);
+    m_peakMeter->updateBitdepth(bits);
+    m_rmsMeter->updateBitdepth(bits);
 }
 
-void MainWindow::anotherChannelSelected(int channel) {
-    parameters.channel = channel;
+void MainWindow::anotherChannelSelected(int channel)
+{
+    m_parameters.m_channel = channel;
 }
 
-void MainWindow::start() {
-    optionsPanel->disableUI(true);
-    entropyDisplay->disableUI(true);
-    if(portAudioControl->openStream(parameters.deviceIndex, parameters.channel, parameters.bitDepth, parameters.sampleRate, parameters.blockSize) == false) {
-        optionsPanel->disableUI(false);
-        entropyDisplay->disableUI(false);
+void MainWindow::start()
+{
+    m_optionsPanel->disableUI(true);
+    m_entropyDisplay->disableUI(true);
+    if(m_portAudioControl->openStream(m_parameters.m_deviceIndex, m_parameters.m_channel, m_parameters.m_bitDepth, m_parameters.m_sampleRate, m_parameters.m_blockSize) == false)
+    {
+        m_optionsPanel->disableUI(false);
+        m_entropyDisplay->disableUI(false);
     }
 }
 
-void MainWindow::stop() {
-    portAudioControl->closeStream();
-    entropy->reset();
-    optionsPanel->disableUI(false);
-    entropyDisplay->disableUI(false);
+void MainWindow::stop()
+{
+    m_portAudioControl->closeStream();
+    m_entropy->reset();
+    m_optionsPanel->disableUI(false);
+    m_entropyDisplay->disableUI(false);
 }
 
-void MainWindow::showAsioPanel() {
-    //portAudioControl->showAsioPanel(devices[optionsPanel->boxAudioInputDevice->itemData(optionsPanel->boxAudioInputDevice->currentIndex()).toInt()].deviceIndex, this->winId());
+void MainWindow::showAsioPanel()
+{
+    //portAudioControl->showAsioPanel(devices[optionsPanel->boxAudioInputDevice->itemData(optionsPanel->boxAudioInputDevice->currentIndex()).toInt()].deviceIndex, winId());
 }
 
-void MainWindow::setEntropyNumberOfBlocks(int numberOfBlocks) {
-    entropy->setNumberOfBlocks(numberOfBlocks);
-    entropyDisplay->updateIntegrationTimeLabel((double)(parameters.blockSize)/(double)(parameters.sampleRate)*1000);
+void MainWindow::setEntropyNumberOfBlocks(int numberOfBlocks)
+{
+    m_entropy->setNumberOfBlocks(numberOfBlocks);
+    m_entropyDisplay->updateIntegrationTimeLabel(static_cast<double>(m_parameters.m_blockSize)/static_cast<double>(m_parameters.m_sampleRate)*1000.0);
 }
 
-void MainWindow::showInfoWindow() {
-    if(infoWindow->isHidden() == true) {
-        infoWindow->setGeometry(this->geometry().center().x()-infoWindow->size().width()/2,
-                                this->geometry().center().y()-infoWindow->size().height()/2,
-                                infoWindow->size().width(),
-                                infoWindow->size().height());
-        infoWindow->show();
+void MainWindow::showInfoWindow()
+{
+    if(m_infoWindow->isHidden())
+    {
+        m_infoWindow->setGeometry(geometry().center().x()-m_infoWindow->size().width()/2,
+                                geometry().center().y()-m_infoWindow->size().height()/2,
+                                m_infoWindow->size().width(),
+                                m_infoWindow->size().height());
+        m_infoWindow->show();
     }
-    else {
-        infoWindow->hide();
+    else
+    {
+        m_infoWindow->hide();
     }
 }
 
 void MainWindow::updateEntropyDisplay(double entropy)
 {
-    entropyDisplay->updateEntropy(entropy);
+    m_entropyDisplay->updateEntropy(entropy);
 }
 
 void MainWindow::updatePeakHolder(double value)
 {
-    meterDisplay->updatePeakHolder(value);
+    m_meterDisplay->updatePeakHolder(value);
 }
 
 void MainWindow::updatePeakMeter(double value)
 {
-    meterDisplay->updatePeakMeter(value);
+    m_meterDisplay->updatePeakMeter(value);
 }
 
 void MainWindow::updateRmsHolder(double value)
 {
-    meterDisplay->updateRmsHolder(value);
+    m_meterDisplay->updateRmsHolder(value);
 }
 
 void MainWindow::updateRmsMeter(double value)
 {
-    meterDisplay->updateRmsMeter(value);
+   m_meterDisplay->updateRmsMeter(value);
 }

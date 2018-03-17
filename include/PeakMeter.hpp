@@ -24,7 +24,8 @@
 #include <cstdint>
 #include <vector>
 
-class PeakMeterListener {
+class PeakMeterListener
+{
 public:
     PeakMeterListener() {}
 
@@ -32,7 +33,8 @@ public:
     virtual void receivePeakHolderValue(double value) = 0;
 };
 
-class PeakMeter {
+class PeakMeter
+{
 public:
     PeakMeter(PeakMeterListener *listener = nullptr);
     // Set the time for meter return
@@ -49,14 +51,14 @@ private:
     void emitPeakValue(double peak);
 
 private:
-    PeakMeterListener *peakMeterListener;
-    double actualValue;
-    double returnTimeValue;
-    uint32_t currentValue;
-    uint32_t referenceValue;
-    uint32_t maxValue;
-    uint32_t absoluteValue;
-    double maximumDynamicRange;
+    PeakMeterListener *m_peakMeterListener;
+    double m_actualValue;
+    double m_returnTimeValue;
+    uint32_t m_currentValue;
+    uint32_t m_referenceValue;
+    uint32_t m_maxValue;
+    uint32_t m_absoluteValue;
+    double m_maximumDynamicRange;
 };
 
 #endif // PEAKMETER_H

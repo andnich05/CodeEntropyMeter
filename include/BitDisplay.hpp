@@ -21,10 +21,7 @@
 #ifndef BITDISPLAY_H
 #define BITDISPLAY_H
 
-#include <QWidget>
-#include <QGraphicsScene>
 #include <QGraphicsView>
-#include <QGraphicsEllipseItem>
 
 #include <bitset>
 
@@ -35,7 +32,8 @@ class QPushButton;
 
 // http://stackoverflow.com/questions/10591635/can-i-get-mouse-events-in-a-qgraphicsitem
 // Custom view in order to get mouse clicks
-class BitView : public QGraphicsView {
+class BitView : public QGraphicsView
+{
     Q_OBJECT
 
 signals:
@@ -43,11 +41,12 @@ signals:
 
 protected:
     // Get the position of the mouse click
-    void mousePressEvent(QMouseEvent *event) override;
+    virtual void mousePressEvent(QMouseEvent *event) override;
 };
 
 
-class BitDisplay : public QWidget {
+class BitDisplay : public QWidget
+{
     Q_OBJECT
 
 public:
@@ -65,7 +64,7 @@ signals:
 
 protected:
     // Enable background-color painting of this widget
-    void paintEvent(QPaintEvent *) override;
+    virtual void paintEvent(QPaintEvent *) override;
 
 private slots:
     // Connected to QPushButton "HOLD" signal
@@ -78,30 +77,30 @@ private slots:
 
 private:
     // Painting area
-    QGraphicsScene scene;
-    BitView view;
+    QGraphicsScene m_scene;
+    BitView m_view;
     // The bits
-    QList<QGraphicsEllipseItem*> bitCircles;
+    QList<QGraphicsEllipseItem*> m_bitCircles;
     // Labels MSB and LSB
-    QGraphicsTextItem *tMsb;
-    QGraphicsTextItem *tLsb;
+    QGraphicsTextItem *m_tMsb;
+    QGraphicsTextItem *m_tLsb;
 
     // UI
-    QComboBox *comboBoxConversion;
-    QComboBox *comboBoxDisplayMode;
-    QLabel *labelSwitch;
-    QLabel *labelDisplayMode;
-    QPushButton *buttonHold;
-    QPushButton *buttonReset;
-    QLabel *labelSamplePosition;
-    QSpinBox *spinBoxSamplePosition;
+    QComboBox *m_comboBoxConversion;
+    QComboBox *m_comboBoxDisplayMode;
+    QLabel *m_labelSwitch;
+    QLabel *m_labelDisplayMode;
+    QPushButton *m_buttonHold;
+    QPushButton *m_buttonReset;
+    QLabel *m_labelSamplePosition;
+    QSpinBox *m_spinBoxSamplePosition;
 
     // Is set when "HOLD" button is pressed
-    bool holdBits;
+    bool m_holdBits;
     // bit array
-    std::bitset<24> bits;
+    std::bitset<24> m_bits;
     // Indicates whether a bit has been set in the actual block already
-    QList<bool> setBits;
+    std::vector<bool> m_setBits;
 
     QBrush brush;
     QPen pen;

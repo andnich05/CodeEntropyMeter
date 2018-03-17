@@ -21,25 +21,24 @@
 #include "PortAudioControl.hpp"
 
 #include <iostream>
-//#include "pa_asio.h"
-//#include "pa_win_wasapi.h"
 
 PortAudioControl::PortAudioControl(PortAudioControlListener *listener)
     : RingBufferReceiver()
-    , controlListener(listener)
-    , stream(nullptr)
-    , buffer(new RingBuffer(50000, this))
+    , m_controlListener(listener)
+    , m_stream(nullptr)
+    , m_buffer(new RingBuffer(50000, this))
 {
-    //connect(buffer, SIGNAL(signalBufferReadyToBeRead(const QVector<qint32> &)), this, SLOT(readBuffer(const QVector<qint32> &)));
-
-    data.buffer = buffer;
-    data.littleEndian = true;
-    data.bitDepth = 16;
+    m_data.m_buffer = m_buffer;
+    m_data.m_littleEndian = true;
+    m_data.m_bitDepth = 16;
+    m_data.m_channel = 0;
 }
 
-bool PortAudioControl::initialize() {
+bool PortAudioControl::initialize()
+{
     PaError err = Pa_Initialize();
-    if(err != paNoError) {
+    if(err != paNoError)
+    {
         std::cout << "Error initializing PortAudio" << std::endl;
         return false;
     }
@@ -47,30 +46,36 @@ bool PortAudioControl::initialize() {
     return true;
 }
 
-const std::vector<PaDeviceInfo> & PortAudioControl::getPaDeviceInfo() {
-    deviceInfos.clear();
+const std::vector<PaDeviceInfo> & PortAudioControl::getPaDeviceInfo()
+{
+    m_deviceInfos.clear();
     int numberOfDevices = Pa_GetDeviceCount();
-    if(numberOfDevices < 0) {
+    if(numberOfDevices < 0)
+    {
         std::cout << "ERROR: No devices found!" << std::endl;
-        return deviceInfos;
+        return m_deviceInfos;
     }
-    else {
+    else
+    {
         std::cout << "Number of devices found:" << numberOfDevices << std::endl;
     }
 
-    for(int i=0; i<numberOfDevices; i++) {
-        deviceInfos.push_back(*Pa_GetDeviceInfo(i));
+    for(int i=0; i<numberOfDevices; i++)
+    {
+        m_deviceInfos.push_back(*Pa_GetDeviceInfo(i));
     }
-    return deviceInfos;
+    return m_deviceInfos;
 }
 
-const PaHostApiInfo & PortAudioControl::getApiInfo(int apiIndex) {
-    apiInfo = *Pa_GetHostApiInfo(apiIndex);
-    return apiInfo;
+const PaHostApiInfo & PortAudioControl::getApiInfo(int apiIndex)
+{
+    m_apiInfo = *Pa_GetHostApiInfo(apiIndex);
+    return m_apiInfo;
 }
 
-const std::vector<uint32_t> & PortAudioControl::getSupportedSampleRates(int deviceNumber) {
-    supportedSampleRates.clear();
+const std::vector<uint32_t> & PortAudioControl::getSupportedSampleRates(int deviceNumber)
+{
+    m_supportedSampleRates.clear();
 
     const PaDeviceInfo *deviceInfo = Pa_GetDeviceInfo(deviceNumber);
 
@@ -79,44 +84,32 @@ const std::vector<uint32_t> & PortAudioControl::getSupportedSampleRates(int devi
     inputParameters.channelCount = deviceInfo->maxInputChannels;
     inputParameters.sampleFormat = paInt16;
     inputParameters.suggestedLatency = 0;
-
-    // Experimental: WASAPI in exclusive mode (needs "pa_win_wasapi.h")
-    /*if(Pa_GetHostApiInfo(Pa_GetDeviceInfo(deviceNumber)->hostApi)->type == paWASAPI) {
-        PaWasapiStreamInfo wasapi;
-        wasapi.size = sizeof(PaWasapiStreamInfo);
-        wasapi.hostApiType = paWASAPI;
-        wasapi.version = 1;
-        wasapi.flags = paWinWasapiExclusive;
-        wasapi.channelMask = NULL;
-        wasapi.hostProcessorOutput = NULL;
-        wasapi.hostProcessorInput = NULL;
-        inputParameters.hostApiSpecificStreamInfo = &wasapi;
-    }*/
-    //else {
-        inputParameters.hostApiSpecificStreamInfo = NULL;
-    //}
-
+    inputParameters.hostApiSpecificStreamInfo = nullptr;
 
     // Sample rates to test
-    static std::vector<double> standardSampleRates = {
+    static std::vector<double> standardSampleRates =
+    {
         8000.0, 9600.0, 11025.0, 12000.0, 16000.0, 22050.0, 24000.0, 32000.0,
         44100.0, 48000.0, 88200.0, 96000.0, 192000.0, -1
     };
 
     PaError err;
 
-    for(const auto& sampleRate : standardSampleRates) {
+    for(const auto& sampleRate : standardSampleRates)
+    {
         err = Pa_IsFormatSupported(&inputParameters, NULL, sampleRate);
-        if(err == paFormatIsSupported) {
-            supportedSampleRates.push_back(static_cast<uint32_t>(sampleRate));
+        if(err == paFormatIsSupported)
+        {
+            m_supportedSampleRates.push_back(static_cast<uint32_t>(sampleRate));
         }
     }
 
-    return supportedSampleRates;
+    return m_supportedSampleRates;
 }
 
-bool PortAudioControl::openStream(int deviceNumber, int channel, int bitDepth, uint32_t sampleRate, uint32_t blockSize) {
-    buffer->clearAndResize(blockSize);
+bool PortAudioControl::openStream(int deviceNumber, int channel, int bitDepth, uint32_t sampleRate, uint32_t blockSize)
+{
+    m_buffer->clearAndResize(blockSize);
 
     PaSampleFormat sampleFormat;
     switch(bitDepth)
@@ -141,62 +134,48 @@ bool PortAudioControl::openStream(int deviceNumber, int channel, int bitDepth, u
     inputParameters.channelCount = channel;
     inputParameters.sampleFormat = sampleFormat;
     inputParameters.suggestedLatency = Pa_GetDeviceInfo(inputParameters.device)->defaultLowInputLatency;
+    inputParameters.hostApiSpecificStreamInfo = nullptr;
 
-    // Experimental: WASAPI in exclusive mode (needs "pa_win_wasapi.h")
-    /*if(Pa_GetHostApiInfo(Pa_GetDeviceInfo(deviceNumber)->hostApi)->type == paWASAPI) {
-        PaWasapiStreamInfo wasapi;
-        wasapi.size = sizeof(PaWasapiStreamInfo);
-        wasapi.hostApiType = paWASAPI;
-        wasapi.version = 1;
-        wasapi.flags = paWinWasapiExclusive;
-        wasapi.channelMask = NULL;
-        wasapi.hostProcessorOutput = NULL;
-        wasapi.hostProcessorInput = NULL;
-        inputParameters.hostApiSpecificStreamInfo = &wasapi;
-    }*/
-    //else {
-        inputParameters.hostApiSpecificStreamInfo = NULL;
-    //}
-
-    data.bitDepth = bitDepth;
-    data.littleEndian = true;
-    data.channel = channel;
+    m_data.m_bitDepth = bitDepth;
+    m_data.m_littleEndian = true;
+    m_data.m_channel = channel;
 
     // Test if the chosen input parameters are supported before opening stream
-    if(Pa_IsFormatSupported(&inputParameters, NULL, sampleRate) != paFormatIsSupported) {
+    if(Pa_IsFormatSupported(&inputParameters, nullptr, sampleRate) != paFormatIsSupported)
+    {
         std::cout << "Format not supported" << std::endl;
         return false;
     }
 
     std::cout << Pa_GetDeviceInfo(deviceNumber)->name << std::endl;
 
-    PaError err = Pa_OpenStream(&stream, &inputParameters, NULL, sampleRate, blockSize, paNoFlag, PortAudioIO::getInputCallback, &data);
-    if(err != paNoError) {
+    PaError err = Pa_OpenStream(&m_stream, &inputParameters, NULL, sampleRate, blockSize, paNoFlag, PortAudioIO::getInputCallback, &m_data);
+    if(err != paNoError)
+    {
         std::cout << Pa_GetErrorText(err) << std::endl;
         std::cout << Pa_GetLastHostErrorInfo()->errorText << std::endl;
         return false;
     }
-    else {
+    else
+    {
         std::cout << "- Stream openend -" << std::endl;
         std::cout << "Name:" << Pa_GetDeviceInfo(inputParameters.device)->name << "| Sample rate:" << sampleRate << "| Bitdepth:" << bitDepth << "| Input channel:" << channel << std::endl;
     }
 
-    err = Pa_StartStream(stream);
-    if(err != paNoError) {
+    err = Pa_StartStream(m_stream);
+    if(err != paNoError)
+    {
         std::cout << "ERROR: Could not start stream!" << std::endl;
         return false;
     }
     return true;
 }
 
-//void PortAudioControl::readBuffer(const QVector<qint32> & samples) {
-//    emit signalSampleListReady(samples);
-//}
-
-void PortAudioControl::closeStream() {
-    if(Pa_IsStreamActive(stream))
+void PortAudioControl::closeStream()
+{
+    if(Pa_IsStreamActive(m_stream))
     {
-        Pa_CloseStream(stream);
+        Pa_CloseStream(m_stream);
         std::cout << "- Stream closed -" << std::endl;
     }
     else
@@ -207,14 +186,8 @@ void PortAudioControl::closeStream() {
 
 void PortAudioControl::receiveSamples(const std::vector<int32_t> & samples)
 {
-    if(controlListener)
+    if(m_controlListener)
     {
-        controlListener->receivePortAudioSamples(samples);
+        m_controlListener->receivePortAudioSamples(samples);
     }
 }
-
-/*
-void PortAudioControl::showAsioPanel(int deviceId, qint32 id) {
-    PaAsio_ShowControlPanel(deviceId, (void*)id);
-}
-*/

@@ -21,58 +21,57 @@
 #ifndef METERDISPLAY_H
 #define METERDISPLAY_H
 
-#include <QWidget>
-#include <QGraphicsScene>
 #include <QGraphicsView>
-#include <QMouseEvent>
 
 class QLabel;
 
 // http://stackoverflow.com/questions/10591635/can-i-get-mouse-events-in-a-qgraphicsitem
 // Custom view in order to get mouse clicks
-class MeterView : public QGraphicsView {
+class MeterView : public QGraphicsView
+{
     Q_OBJECT
 protected:
-    void mousePressEvent(QMouseEvent *event) override;
+    virtual void mousePressEvent(QMouseEvent *event) override;
 signals:
     void signalMouseEvent(QPoint pos);
 };
 
-class MeterDisplay : public QWidget {
+class MeterDisplay : public QWidget
+{
     Q_OBJECT
 
 public:
     MeterDisplay(QWidget *parent = 0);
 
 private:
-    QGraphicsScene scene;
-    MeterView view;
+    QGraphicsScene m_scene;
+    MeterView m_view;
 
-    QGraphicsRectItem *rectPeakMeter;
-    QGraphicsLineItem *rectPeakHolder;
-    QGraphicsRectItem *rectPeakClip;
-    QGraphicsRectItem *rectRmsMeter;
-    QGraphicsLineItem *rectRmsHolder;
+    QGraphicsRectItem *m_rectPeakMeter;
+    QGraphicsLineItem *m_rectPeakHolder;
+    QGraphicsRectItem *m_rectPeakClip;
+    QGraphicsRectItem *m_rectRmsMeter;
+    QGraphicsLineItem *m_rectRmsHolder;
 
     void paintScale();
     void paintPeakMeterBackground();
     void paintRmsMeterBackground();
 
-    QLabel *labelPeak;
-    QLabel *labelRms;
-    QLabel *labelCrest;
-    QLabel *labelPeakValue;
-    QLabel *labelRmsValue;
-    QLabel *labelCrestValue;
-    QLabel *labelMaxPeakValue;
-    QLabel *labelMaxRmsValue;
-    QLabel *labelMaxCrestValue;
-    QLabel *labelCurrent;
-    QLabel *labelMax;
-    QLabel *labelDb;
+    QLabel *m_labelPeak;
+    QLabel *m_labelRms;
+    QLabel *m_labelCrest;
+    QLabel *m_labelPeakValue;
+    QLabel *m_labelRmsValue;
+    QLabel *m_labelCrestValue;
+    QLabel *m_labelMaxPeakValue;
+    QLabel *m_labelMaxRmsValue;
+    QLabel *m_labelMaxCrestValue;
+    QLabel *m_labelCurrent;
+    QLabel *m_labelMax;
+    QLabel *m_labelDb;
 
-    double actualValue;
-    double returnTimeValue;
+    double m_actualValue;
+    double m_returnTimeValue;
 
 public slots:
     void updatePeakMeter(double peak);
@@ -85,7 +84,7 @@ public slots:
     void resetClip(QPoint pos);
 
 protected:
-    void paintEvent(QPaintEvent *);
+    virtual void paintEvent(QPaintEvent *) override;
 };
 
 #endif // METERDISPLAY_H

@@ -19,86 +19,102 @@
  */
 
 #include "PeakMeter.hpp"
-#include <math.h>
-#include <QDebug>
 
-const double INF = -999;
+#include <cmath>
+#include <algorithm>
+
+const double INF = -999.0;
 
 PeakMeter::PeakMeter(PeakMeterListener *listener)
-    : peakMeterListener(listener)
-    , actualValue(-60)
-    , returnTimeValue(0)
-    , currentValue(0)
-    , referenceValue(0)
-    , maxValue(0)
-    , absoluteValue(0)
-    , maximumDynamicRange(0)
+    : m_peakMeterListener(listener)
+    , m_actualValue(-60.0)
+    , m_returnTimeValue(0.0)
+    , m_currentValue(0)
+    , m_referenceValue(0)
+    , m_maxValue(0)
+    , m_absoluteValue(0)
+    , m_maximumDynamicRange(0.0)
 {
 }
 
-void PeakMeter::updateMeter(const std::vector<int32_t> & signalValues) {
-    if(!peakMeterListener)
+void PeakMeter::updateMeter(const std::vector<int32_t> & signalValues)
+{
+    if(!m_peakMeterListener)
     {
         return;
     }
 
     // Get the maximum value of the samples
-    currentValue = getMaximum(signalValues);
-    emitPeakValue(calculatePeak(currentValue, referenceValue));
+    m_currentValue = getMaximum(signalValues);
+    emitPeakValue(calculatePeak(m_currentValue, m_referenceValue));
 }
 
-void PeakMeter::updateBitdepth(int bitdepth) {
-    referenceValue = pow(2, bitdepth-1);
-    maximumDynamicRange = 20*log10(pow(2,bitdepth)/(double)2);
+void PeakMeter::updateBitdepth(int bitdepth)
+{
+    m_referenceValue = static_cast<uint32_t>(std::pow(2.0, bitdepth-1.0));
+    m_maximumDynamicRange = 20.0*std::log10(std::pow(2.0,bitdepth)/2.0);
 }
 
-quint32 PeakMeter::getMaximum(const std::vector<int32_t> & signalValues) {
-    maxValue = 0;
-    absoluteValue = 0;
-    for(const auto& signalValue : signalValues) {
-        absoluteValue = std::abs(signalValue);
-        maxValue = std::max(maxValue, absoluteValue);
+uint32_t PeakMeter::getMaximum(const std::vector<int32_t> & signalValues)
+{
+    m_maxValue = 0;
+    m_absoluteValue = 0;
+    for(const auto& signalValue : signalValues)
+    {
+        m_absoluteValue = std::abs(signalValue);
+        m_maxValue = std::max(m_maxValue, m_absoluteValue);
     }
-    return maxValue;
+    return m_maxValue;
 }
 
-double PeakMeter::calculatePeak(int currentValue, int referenceValue) {
-    if(currentValue > 0) {
-        return 20*log10((double)currentValue/(double)referenceValue);
+double PeakMeter::calculatePeak(int currentValue, int referenceValue)
+{
+    if(m_currentValue > 0)
+    {
+        return 20.0*std::log10(static_cast<double>(currentValue)/static_cast<double>(referenceValue));
     }
-    else {
+    else
+    {
         return INF;
     }
 }
 
-void PeakMeter::emitPeakValue(double peak) {
+void PeakMeter::emitPeakValue(double peak)
+{
     // Check if the calculated value is greater than the value which is currently being displayed
-    if(peak > actualValue) {
-        actualValue = peak;
+    if(peak > m_actualValue)
+    {
+        m_actualValue = peak;
         // Check if the holder needs to be updated
-        if(peak >= -60) {
-            peakMeterListener->receivePeakHolderValue(actualValue);
+        if(peak >= -60.0)
+        {
+            m_peakMeterListener->receivePeakHolderValue(m_actualValue);
         }
     }
     // Check if the signal is clipping
-    else if(peak >= 0) {
-        actualValue = 0;
+    else if(peak >= 0.0)
+    {
+        m_actualValue = 0.0;
     }
 
     // Update current meter value
-    peakMeterListener->receivePeakMeterValue(actualValue);
+    m_peakMeterListener->receivePeakMeterValue(m_actualValue);
 
     // Decrement current value if the calculated value is smaller (return time)
-    if(peak < actualValue) {
-        if(actualValue > -maximumDynamicRange) {
-            actualValue -= returnTimeValue;
+    if(peak < m_actualValue)
+    {
+        if(m_actualValue > -m_maximumDynamicRange)
+        {
+            m_actualValue -= m_returnTimeValue;
         }
-        else {
-            actualValue = INF;
+        else
+        {
+            m_actualValue = INF;
         }
     }
 }
 
-void PeakMeter::setReturnTimeValue(double value) {
-    returnTimeValue = value;
+void PeakMeter::setReturnTimeValue(double value)
+{
+    m_returnTimeValue = value;
 }

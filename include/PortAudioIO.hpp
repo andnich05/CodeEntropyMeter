@@ -28,7 +28,8 @@
 
 class RingBuffer;
 
-class PortAudioIO {
+class PortAudioIO
+{
 
 public:
     PortAudioIO();
@@ -38,24 +39,16 @@ public:
                                              PaStreamCallbackFlags statusFlags, void *userData);
 
     // Array with custom user data which is passed to the callback function
-    typedef struct {
-        std::shared_ptr<RingBuffer> buffer;
-        int bitDepth;
-        bool littleEndian;
-        int channel;
-    } paTestData;
+    struct PortAudioUserData
+    {
+        std::shared_ptr<RingBuffer> m_buffer;
+        int m_bitDepth;
+        bool m_littleEndian;
+        int m_channel;
+    };
 
 private:
     static uint32_t sampleCounter;
-    static const int8_t *bufferPointer;
-
-    // 8 bit pointer used to iterate trhough the memory addresses
-    static int32_t sampleData;
-    static uint32_t s1;
-    static uint32_t s2;
-    static uint32_t s3;
-
-    static paTestData *data;
 };
 
 #endif // PORTAUDIOIO_H

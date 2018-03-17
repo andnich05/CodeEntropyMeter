@@ -33,8 +33,8 @@ public:
     virtual void receiveRmsHolderValue(double rms) = 0;
 };
 
-class RMSMeter {
-
+class RMSMeter
+{
 public:
     RMSMeter(RMSMeterListener *listener = nullptr);
 
@@ -49,19 +49,12 @@ private:
     void emitRmsValue(double rms);
 
 private:
-    RMSMeterListener *rmsListener;
-    double actualValue;
-    double returnTimeValue;
-    uint32_t referenceValue;
-    int32_t i;
-    double maximumDynamicRange;
-
-//public slots:
-
-
-//signals:
-//    void signalUpdateRmsMeter(double value);
-//    void signalUpdateRmsHolder(double value);
+    RMSMeterListener *m_rmsListener;
+    double m_actualValue;
+    double m_returnTimeValue;
+    uint32_t m_referenceValue;
+    int32_t m_i;
+    double m_maximumDynamicRange;
 };
 
 #endif // RMSMETER_H

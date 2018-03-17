@@ -26,17 +26,18 @@
 class QLabel;
 class QSpinBox;
 
-class EntropyDisplay : public QWidget {
+class EntropyDisplay : public QWidget
+{
     Q_OBJECT
 
 public:
     EntropyDisplay(QWidget *parent = 0);
 
 private:
-    QLabel *labelEntropy;
-    QLabel *labelNumberOfBlocks;
-    QSpinBox *boxNumberOfBlocks;
-    QLabel *labelIntegrationTime;
+    QLabel *m_labelEntropy;
+    QLabel *m_labelNumberOfBlocks;
+    QSpinBox *m_boxNumberOfBlocks;
+    QLabel *m_labelIntegrationTime;
 
 signals:
     void signalNumberOfBlocksChanged(int value);
@@ -49,9 +50,7 @@ public slots:
     void disableUI(bool disable);
 
 protected:
-    void paintEvent(QPaintEvent *);
-
+    virtual void paintEvent(QPaintEvent *) override;
 };
-
 
 #endif // ENTROPYDISPLAY_H

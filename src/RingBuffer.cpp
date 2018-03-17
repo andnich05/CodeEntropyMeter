@@ -21,36 +21,31 @@
 #include "RingBuffer.hpp"
 
 RingBuffer::RingBuffer(int capacity, RingBufferReceiver *receiver)
-    : inBuffer(capacity, 0)
-    , outBuffer(capacity, 0)
-    , receiverObject(receiver)
+    : m_inBuffer(capacity, 0)
+    , m_receiverObject(receiver)
 {
 }
 
-void RingBuffer::clearAndResize(int capacity) {
-    inBuffer.assign(capacity, 0);
-    outBuffer.assign(capacity, 0);
+void RingBuffer::clearAndResize(int capacity)
+{
+    m_inBuffer.assign(capacity, 0);
 }
 
-void RingBuffer::insertItem(int32_t item, uint32_t position) {
+void RingBuffer::insertItem(int32_t item, uint32_t position)
+{
     // Write sample to first buffer
-    inBuffer[position] = item;
+    m_inBuffer[position] = item;
     // Check if buffer is full
-    if(static_cast< size_t >( position ) == inBuffer.size()-1) {
+    if(static_cast<size_t>(position) == m_inBuffer.size()-1)
+    {
         // Lock mutex to prevent the callback function from writing new samples to first buffer
-        mutex.lock();
+        std::lock_guard<std::mutex> lock(m_mutex);
         // Copy first buffer to second buffer
-        outBuffer = inBuffer;
-        // Unlock mutex
-        mutex.unlock();
+        m_inBuffer;
         // Second buffer is ready to be read
-        if(receiverObject)
+        if(m_receiverObject)
         {
-            receiverObject->receiveSamples(outBuffer);
+            m_receiverObject->receiveSamples(m_inBuffer);
         }
     }
 }
-
-//void RingBuffer::emitBufferReadyToBeRead() {
-//    emit signalBufferReadyToBeRead(outBuffer);
-//}

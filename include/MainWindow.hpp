@@ -21,10 +21,8 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <memory>
 #include <QMainWindow>
-#include <QThread>
-#include "portaudio.h"
+
 #include "PortAudioControl.hpp"
 #include "Entropy.hpp"
 #include "PeakMeter.hpp"
@@ -53,52 +51,56 @@ public:
     virtual ~MainWindow ();
 
 public:
-    virtual void receivePortAudioSamples(const std::vector<int32_t> & samples);
+    virtual void receivePortAudioSamples(const std::vector<int32_t> & samples) override;
 
-    virtual void receiveEntropy(double entropy);
+    virtual void receiveEntropy(double entropy) override;
 
-    virtual void receivePeakHolderValue(double value);
-    virtual void receivePeakMeterValue(double value);
+    virtual void receivePeakHolderValue(double value) override;
+    virtual void receivePeakMeterValue(double value) override;
 
-    virtual void receiveRmsHolderValue(double rms);
-    virtual void receiveRmsMeterValue(double rms);
+    virtual void receiveRmsHolderValue(double rms) override;
+    virtual void receiveRmsMeterValue(double rms) override;
+
 private:
     // Struct with information of all input devices
-    struct device {
-        QString name;
-        int deviceIndex;
-        PaHostApiTypeId hostApi;
-        int maxInputChannels;
-        std::vector<uint32_t> supportedSampleRates;
+    struct DeviceInformation
+    {
+        std::string m_name;
+        int m_deviceIndex;
+        PaHostApiTypeId m_hostApi;
+        int m_maxInputChannels;
+        std::vector<uint32_t> m_supportedSampleRates;
     };
-    QList<device> devices;
+    std::vector<DeviceInformation> m_devices;
 
     // Struct with selected parameters in optionsPanel
-    struct selectedParameters {
-        int hostApiId;
-        int device;
-        PaDeviceIndex deviceIndex;
-        quint32 sampleRate;
-        PaSampleFormat sampleFormat;
-        quint32 blockSize;
-        int bitDepth;
-        int channel;
-    } parameters;
+    struct SelectedParameters
+    {
+        int m_hostApiId;
+        int m_device;
+        PaDeviceIndex m_deviceIndex;
+        quint32 m_sampleRate;
+        PaSampleFormat m_sampleFormat;
+        quint32 m_blockSize;
+        int m_bitDepth;
+        int m_channel;
+    };
+    SelectedParameters m_parameters;
 
     // Objects
-    OptionPanel *optionsPanel;
-    BitDisplay *bitDisplay;
-    std::unique_ptr<Entropy> entropy;
-    PeakMeter *peakMeter;
-    std::unique_ptr<RMSMeter> rmsMeter;
-    MeterDisplay *meterDisplay;
-    std::unique_ptr<PortAudioControl> portAudioControl;
-    EntropyDisplay *entropyDisplay;
-    InfoWindow *infoWindow;
+    OptionPanel *m_optionsPanel;
+    BitDisplay *m_bitDisplay;
+    std::unique_ptr<Entropy> m_entropy;
+    PeakMeter *m_peakMeter;
+    std::unique_ptr<RMSMeter> m_rmsMeter;
+    MeterDisplay *m_meterDisplay;
+    std::unique_ptr<PortAudioControl> m_portAudioControl;
+    EntropyDisplay *m_entropyDisplay;
+    InfoWindow *m_infoWindow;
 
-    QHBoxLayout *mainHLayout;
-    QVBoxLayout *mainVLayout;
-    QHBoxLayout *mainLayout;
+    QHBoxLayout *m_mainHLayout;
+    QVBoxLayout *m_mainVLayout;
+    QHBoxLayout *m_mainLayout;
 
     void initializeUI();
     // Fill device info struct
@@ -108,8 +110,8 @@ private:
     void connectUI();
 
 protected:
-    void resizeEvent(QResizeEvent *event);
-    void closeEvent(QCloseEvent *event);
+    virtual void resizeEvent(QResizeEvent *event) override;
+    virtual void closeEvent(QCloseEvent *event) override;
 
 private slots:
     // Start processing

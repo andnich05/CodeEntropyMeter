@@ -19,95 +19,85 @@
  */
 
 #include "Entropy.hpp"
-#include <cmath>
-#include <QDebug>
 
 const double LOG2 = log10(2);
 
 Entropy::Entropy(EntropyListener *listener)
-    : entropyListener(listener)
-    , counterArrayPositive(0x800000) // Propabilities for positive symbols, range is from 0 to 2^24/2-1
-    , counterArrayNegative(0x800000) // Propabilities for negative symbols, range is from -1 to -2^24/2
-    , probabilityPositive(0.0)
-    , probabilityNegative(0.0)
-    , numberOfSymbols(pow(2,16))
-    , numberOfSamples(0)
-    , i(0)
-    , entropy(0.0)
-    , blockCounter(0)
-    , numberOfBlocks(50)
-    , blockSize(0)
+    : m_entropyListener(listener)
+    , m_probability(0.0)
+    , m_numberOfSymbols(static_cast<uint32_t>(pow(2,16)))
+    , m_numberOfSamples(0)
+    , m_entropy(0.0)
+    , m_blockCounter(0)
+    , m_numberOfBlocks(50)
+    , m_blockSize(0)
 {
 }
 
-void Entropy::addSamples(const std::vector<int32_t> & signalValues) {
-    if(!entropyListener)
+void Entropy::addSamples(const std::vector<int32_t> & signalValues)
+{
+    if(!m_entropyListener)
     {
         return;
     }
 
-    // Clear all arrays if its the first block
-    if(blockCounter == 0) {
+    // Reset everything if its the first block
+    if(m_blockCounter == 0)
+    {
         clear();
     }
 
     // Count how often each symbol occurs
-    for(i=0; i<signalValues.size(); ++i) {
-        if(signalValues.at(i) >= 0) {
-            ++counterArrayPositive[signalValues[i]];
-        }
-        else {
-            ++counterArrayNegative[-signalValues[i]];
-        }
-
+    for(const auto& signalValue : signalValues)
+    {
+        m_mapSymbolsToOccurrence[signalValue]++;
     }
-    ++blockCounter;
+    ++m_blockCounter;
 
     // Calculate entropy if all blocks have been processed
-    if(blockCounter == numberOfBlocks) {
-        entropyListener->receiveEntropy(calculateEntropy(static_cast<int>(signalValues.size())));
-        blockCounter = 0;
+    if(m_blockCounter == m_numberOfBlocks)
+    {
+        calculateEntropy(static_cast<int>(signalValues.size()));
+        m_entropyListener->receiveEntropy(m_entropy);
+        m_blockCounter = 0;
     }
 }
 
-double Entropy::calculateEntropy(int blockSize) {
-    entropy = 0.0;
-    probabilityPositive = 0;
-    probabilityNegative = 0;
-    numberOfSamples = blockSize*numberOfBlocks;
-    for(i=0; i<numberOfSymbols/2; i++) {
-
+void Entropy::calculateEntropy(int blockSize)
+{
+    m_entropy = 0.0;
+    m_probability = 0.0;
+    m_numberOfSamples = blockSize*m_numberOfBlocks;
+    for(const auto& symbolCount : m_mapSymbolsToOccurrence)
+    {
         // Calculate propabilities
-        probabilityPositive = (double)counterArrayPositive[i]/numberOfSamples;
-        probabilityNegative = (double)counterArrayNegative[i+1]/numberOfSamples;
-
+        m_probability = static_cast<double>(symbolCount.second)/m_numberOfSamples;
         // Calculate entropy
-        if(probabilityPositive > 0.0) {
-            entropy += probabilityPositive * (log10(probabilityPositive));
-        }
-        if(probabilityNegative > 0.0) {
-            entropy += probabilityNegative * (log10(probabilityNegative));
-        }
+        m_entropy += m_probability * (std::log10(m_probability));
     }
-    entropy = -entropy/LOG2;
-    return entropy;
+    m_entropy = -m_entropy/LOG2;
 }
 
-void Entropy::setNumberOfBlocks(int numberOfBlocks) {
-    this->numberOfBlocks = numberOfBlocks;
+void Entropy::setNumberOfBlocks(int numberOfBlocks)
+{
+    m_numberOfBlocks = numberOfBlocks;
 }
 
-void Entropy::setNumberOfSymbols(int bitdepth) {
-    numberOfSymbols = pow(2,bitdepth);
+void Entropy::setNumberOfSymbols(int bitdepth)
+{
+    m_numberOfSymbols = static_cast<uint32_t>(pow(2,bitdepth));
 }
 
-void Entropy::clear() {
-    entropy = 0.0;
-    std::fill(counterArrayPositive.begin(), counterArrayPositive.end(), 0);
-    std::fill(counterArrayNegative.begin(), counterArrayNegative.end(), 0);
+void Entropy::clear()
+{
+    m_entropy = 0.0;
+    m_probability = 0.0;
+    m_entropy = 0.0;
+    m_blockCounter = 0;
+    m_mapSymbolsToOccurrence.clear();
 }
 
-void Entropy::reset() {
+void Entropy::reset()
+{
     clear();
-    blockCounter = 0;
 }

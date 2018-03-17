@@ -21,18 +21,19 @@
 #ifndef RINGBUFFER_H
 #define RINGBUFFER_H
 
-#include <memory>
 #include <mutex>
 #include <vector>
 
-class RingBufferReceiver {
+class RingBufferReceiver
+{
 public:
     RingBufferReceiver() {}
 
     virtual void receiveSamples(const std::vector<int32_t> & samples) = 0;
 };
 
-class RingBuffer {
+class RingBuffer
+{
 
 public:
     RingBuffer(int capacity, RingBufferReceiver *receiver = nullptr);
@@ -42,19 +43,10 @@ public:
 
 private:
     // Buffer to which is written by the callback function
-    std::vector<int32_t> inBuffer;
-    // Buffer to pass to further processing
-    std::vector<int32_t> outBuffer;
+    std::vector<int32_t> m_inBuffer;
     // Mutex to lock while copying from inBuffer to outBuffer
-    std::mutex mutex;
-    RingBufferReceiver *receiverObject;
-
-//private slots:
-//    void emitBufferReadyToBeRead();
-
-//signals:
-//    void signalBufferReadyToBeRead(const std::vector<int32_t> & samples);
-
+    std::mutex m_mutex;
+    RingBufferReceiver *m_receiverObject;
 };
 
 #endif // RINGBUFFER_H

@@ -19,23 +19,23 @@
  */
 
 #include "RMSMeter.hpp"
-#include <math.h>
-#include <QDebug>
+#include <cmath>
 
-const double INF = -999;
+const double INF = -999.0;
 
 RMSMeter::RMSMeter(RMSMeterListener *listener)
-    : rmsListener(listener)
-    , actualValue(-60.0)
-    , returnTimeValue(0.0)
-    , referenceValue(0)
-    , i(0)
-    , maximumDynamicRange(0.0)
+    : m_rmsListener(listener)
+    , m_actualValue(-60.0)
+    , m_returnTimeValue(0.0)
+    , m_referenceValue(0)
+    , m_i(0)
+    , m_maximumDynamicRange(0.0)
 {
 }
 
-void RMSMeter::updateMeter(const std::vector<int32_t> & signalValues) {
-    if(!rmsListener)
+void RMSMeter::updateMeter(const std::vector<int32_t> & signalValues)
+{
+    if(!m_rmsListener)
     {
         return;
     }
@@ -43,63 +43,77 @@ void RMSMeter::updateMeter(const std::vector<int32_t> & signalValues) {
     emitRmsValue(calculateRootMeanSquare(signalValues));
 }
 
-void RMSMeter::updateBitdepth(int bitdepth) {
-    referenceValue = pow(2, bitdepth-1);
-    maximumDynamicRange = 20*log10(pow(2,bitdepth)/(double)2);
+void RMSMeter::updateBitdepth(int bitdepth)
+{
+    m_referenceValue = static_cast<uint32_t>(std::pow(2.0, bitdepth-1));
+    m_maximumDynamicRange = 20.0*std::log10(std::pow(2.0,bitdepth)/2.0);
 }
 
-double RMSMeter::calculateRootMeanSquare(const std::vector<int32_t> & signalValues) {
+double RMSMeter::calculateRootMeanSquare(const std::vector<int32_t> & signalValues)
+{
     long double rms = 0;
 
     // Square
-    for(const auto& signalValue : signalValues) {
-        rms += pow(signalValue, 2);
+    for(const auto& signalValue : signalValues)
+    {
+        rms += std::pow(signalValue, 2);
     }
 
     // Mean + Root
-    rms = sqrt(rms / signalValues.size());
+    rms = std::sqrt(rms / signalValues.size());
 
     // Convert to dB if rms isn't zero
-    if(rms > 0) {
-        if(rms < 1) {
+    if(rms > 0)
+    {
+        if(rms < 1)
+        {
             rms = 1;
         }
-        rms = 20*log10(rms/(double)referenceValue);
+        rms = 20.0*std::log10(rms/static_cast<double>(m_referenceValue));
         return rms;
     }
-    else {
+    else
+    {
         return INF;
     }
 }
 
-void RMSMeter::emitRmsValue(double rms) {
+void RMSMeter::emitRmsValue(double rms)
+{
     // Check if the calculated value is greater than the value which is currently being displayed
-    if(rms > actualValue) {
-        actualValue = rms;
+    if(rms > m_actualValue)
+    {
+        m_actualValue = rms;
         // Check if the holder needs to be updated
-        if(rms >= -60) {
-            rmsListener->receiveRmsHolderValue(actualValue);
+        if(rms >= -60.0)
+        {
+            m_rmsListener->receiveRmsHolderValue(m_actualValue);
         }
     }
     // Check if the signal is clipping
-    else if(rms >= 0) {
-        actualValue = 0;
+    else if(rms >= 0)
+    {
+        m_actualValue = 0;
     }
 
     // Update current meter value
-    rmsListener->receiveRmsMeterValue(actualValue);
+    m_rmsListener->receiveRmsMeterValue(m_actualValue);
 
     // Decrement current value if the calculated value is smaller (return time)
-    if(rms < actualValue) {
-        if(actualValue > -maximumDynamicRange) {
-            actualValue -= returnTimeValue;
+    if(rms < m_actualValue)
+    {
+        if(m_actualValue > -m_maximumDynamicRange)
+        {
+            m_actualValue -= m_returnTimeValue;
         }
-        else {
-            actualValue = INF;
+        else
+        {
+            m_actualValue = INF;
         }
     }
 }
 
-void RMSMeter::setReturnTimeValue(double value) {
-    this->returnTimeValue = value;
+void RMSMeter::setReturnTimeValue(double value)
+{
+    m_returnTimeValue = value;
 }

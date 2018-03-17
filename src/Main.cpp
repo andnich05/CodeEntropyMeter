@@ -21,11 +21,9 @@
 #include <QApplication>
 #include "MainWindow.hpp"
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
     QApplication app(argc, argv);
-
-    // Register QVector as meta type in order to be able to use it in connect-function
-    qRegisterMetaType<QVector<qint32>>("QVector<qint32>");
 
     MainWindow mw;
     mw.show();

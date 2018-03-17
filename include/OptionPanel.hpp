@@ -23,7 +23,6 @@
 
 #include <QWidget>
 
-class QLabel;
 class QVBoxLayout;
 class QHBoxLayout;
 class QFormLayout;
@@ -31,7 +30,8 @@ class QComboBox;
 class QPushButton;
 class QSpinBox;
 
-class OptionPanel : public QWidget {
+class OptionPanel : public QWidget
+{
     Q_OBJECT
 
 public:
@@ -49,23 +49,23 @@ public:
     void disableStopButton(bool disable);
 
 private:
-    QVBoxLayout *mainLayout;
-    QHBoxLayout *buttonLayout;
-    QFormLayout *formLayout;
+    QVBoxLayout *m_mainLayout;
+    QHBoxLayout *m_buttonLayout;
+    QFormLayout *m_formLayout;
 
-    QComboBox *boxAudioInputDevice;
-    QComboBox *boxHostAPI;
-    QComboBox *boxSampleRate;
-    QComboBox *boxInputChannel;
-    QComboBox *boxBitDepth;
-    QSpinBox *boxBlockSize;
-    QPushButton *buttonStart;
-    QPushButton *buttonStop;
-    QPushButton *buttonShowAsioPanel;
-    QPushButton *buttonInfo;
+    QComboBox *m_boxAudioInputDevice;
+    QComboBox *m_boxHostAPI;
+    QComboBox *m_boxSampleRate;
+    QComboBox *m_boxInputChannel;
+    QComboBox *m_boxBitDepth;
+    QSpinBox *m_boxBlockSize;
+    QPushButton *m_buttonStart;
+    QPushButton *m_buttonStop;
+    QPushButton *m_buttonShowAsioPanel;
+    QPushButton *m_buttonInfo;
 
 protected:
-    void paintEvent(QPaintEvent *);
+    virtual void paintEvent(QPaintEvent *) override;
 
 signals:
     void signalHostApiChanged(int apiId);

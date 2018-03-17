@@ -26,27 +26,24 @@
 class QLabel;
 class QPushButton;
 
-class InfoWindow : public QWidget {
+class InfoWindow : public QWidget
+{
     Q_OBJECT
 
 public:
     InfoWindow(QWidget *parent = 0);
 
 private:
-    QLabel *labelVersion;
-    QLabel *labelCopyright;
-    QPushButton *buttonClose;
-
-public slots:
-
-private slots:
+    QLabel *m_labelVersion;
+    QLabel *m_labelCopyright;
+    QPushButton *m_buttonClose;
 
 signals:
     void signalConversionChanged(bool showOriginal);
 
 protected:
     // Enable background-color painting of this widget
-    void paintEvent(QPaintEvent *);
+    virtual void paintEvent(QPaintEvent *) override;
 };
 
 #endif // INFOWINDOW_H
