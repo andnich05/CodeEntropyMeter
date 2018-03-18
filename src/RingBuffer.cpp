@@ -33,15 +33,13 @@ void RingBuffer::clearAndResize(int capacity)
 
 void RingBuffer::insertItem(int32_t item, uint32_t position)
 {
-    // Write sample to first buffer
+    // Write sample to buffer
     m_inBuffer[position] = item;
     // Check if buffer is full
     if(static_cast<size_t>(position) == m_inBuffer.size()-1)
     {
-        // Lock mutex to prevent the callback function from writing new samples to first buffer
+        // Lock mutex to prevent the callback function from writing new samples to buffer
         std::lock_guard<std::mutex> lock(m_mutex);
-        // Copy first buffer to second buffer
-        m_inBuffer;
         // Second buffer is ready to be read
         if(m_receiverObject)
         {

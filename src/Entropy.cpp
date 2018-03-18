@@ -19,6 +19,7 @@
  */
 
 #include "Entropy.hpp"
+#include <cmath>
 
 const double LOG2 = log10(2);
 
