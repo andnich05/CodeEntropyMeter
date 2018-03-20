@@ -322,7 +322,7 @@ void MainWindow::anotherApiSelected(int api)
         if(m_devices[i].m_hostApi == api)
         {
             devicesList.append(QString::fromStdString(m_devices[i].m_name));
-            deviceIds.append(i);
+            deviceIds.append(static_cast<int>(i));
         }
     }
     m_optionsPanel->setInputDevices(devicesList, deviceIds);

@@ -31,8 +31,8 @@ const QColor colorFont(255,255,255);
 InfoWindow::InfoWindow(QWidget *parent)
     : QWidget(parent)
 {
-    m_labelVersion = new QLabel(trUtf8("Code Entropy Meter 1.00"), this);
-    m_labelCopyright = new QLabel(trUtf8("Copyright (C) 2014 by Andrej Nichelmann and Klaus Michael Indlekofer \n\n"
+    m_labelVersion = new QLabel(trUtf8("Code Entropy Meter 1.1.0"), this);
+    m_labelCopyright = new QLabel(trUtf8("Copyright (C) 2014-2018 by Andrej Nichelmann and Klaus Michael Indlekofer \n\n"
                                        "This program is free software: you can redistribute it and/or modify "
                                        "it under the terms of the GNU General Public License as published by "
                                        "the Free Software Foundation, either version 3 of the License, or "
